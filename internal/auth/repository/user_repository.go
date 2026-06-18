@@ -1,3 +1,4 @@
+// Package repository provides repository functionality for the IMB platform.
 package repository
 
 import (

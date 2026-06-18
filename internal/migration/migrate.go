@@ -1,3 +1,4 @@
+// Package migration provides migration functionality for the IMB platform.
 package migration
 
 import (

@@ -1,3 +1,4 @@
+// Package response provides response functionality for the IMB platform.
 package response
 
 // SwaggerResponse is a generic wrapper exclusively used for Swaggo OpenAPI generation

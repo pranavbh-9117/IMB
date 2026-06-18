@@ -1,3 +1,4 @@
+// Package repository provides data access for leave requests and balances.
 package repository
 
 import (
@@ -31,6 +32,7 @@ func (r *leaveRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
+// DoInTransaction executes the provided function within a database transaction.
 func (r *leaveRepository) DoInTransaction(ctx context.Context, fn func(txCtx context.Context) error) error {
 	// If already in a transaction, just execute the function
 	if _, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
@@ -43,6 +45,7 @@ func (r *leaveRepository) DoInTransaction(ctx context.Context, fn func(txCtx con
 	})
 }
 
+// CreateRequest inserts a new leave request into the database.
 func (r *leaveRepository) CreateRequest(ctx context.Context, request *domain.LeaveRequest) error {
 	if err := r.getDB(ctx).Create(request).Error; err != nil {
 		return fmt.Errorf("leave repository: create request: %w", err)
@@ -50,6 +53,7 @@ func (r *leaveRepository) CreateRequest(ctx context.Context, request *domain.Lea
 	return nil
 }
 
+// GetRequestByID retrieves a specific leave request by its UUID.
 func (r *leaveRepository) GetRequestByID(ctx context.Context, id uuid.UUID) (*domain.LeaveRequest, error) {
 	var request domain.LeaveRequest
 	err := r.getDB(ctx).
@@ -64,6 +68,7 @@ func (r *leaveRepository) GetRequestByID(ctx context.Context, id uuid.UUID) (*do
 	return &request, nil
 }
 
+// ListRequests retrieves a list of leave requests based on dynamic filters.
 func (r *leaveRepository) ListRequests(ctx context.Context, filter RequestFilter, offset, limit int) ([]domain.LeaveRequest, error) {
 	var requests []domain.LeaveRequest
 	query := r.getDB(ctx).Model(&domain.LeaveRequest{})
@@ -94,6 +99,7 @@ func (r *leaveRepository) ListRequests(ctx context.Context, filter RequestFilter
 	return requests, nil
 }
 
+// UpdateRequestStatus updates the approval status, reviewer ID, and note.
 func (r *leaveRepository) UpdateRequestStatus(ctx context.Context, id uuid.UUID, status domain.LeaveStatus, reviewerID *uuid.UUID, note string) error {
 	now := time.Now()
 	updates := map[string]interface{}{
@@ -114,6 +120,7 @@ func (r *leaveRepository) UpdateRequestStatus(ctx context.Context, id uuid.UUID,
 	return nil
 }
 
+// CreateBalance creates an initial leave balance record for a user.
 func (r *leaveRepository) CreateBalance(ctx context.Context, balance *domain.LeaveBalance) error {
 	if err := r.getDB(ctx).Create(balance).Error; err != nil {
 		return fmt.Errorf("leave repository: create balance: %w", err)
@@ -121,6 +128,7 @@ func (r *leaveRepository) CreateBalance(ctx context.Context, balance *domain.Lea
 	return nil
 }
 
+// GetBalanceByUserID retrieves the leave balance associated with a user.
 func (r *leaveRepository) GetBalanceByUserID(ctx context.Context, userID uuid.UUID) (*domain.LeaveBalance, error) {
 	var balance domain.LeaveBalance
 	err := r.getDB(ctx).
@@ -134,6 +142,7 @@ func (r *leaveRepository) GetBalanceByUserID(ctx context.Context, userID uuid.UU
 	return &balance, nil
 }
 
+// UpdateBalance persists modifications to a user's total or used leave days.
 func (r *leaveRepository) UpdateBalance(ctx context.Context, balance *domain.LeaveBalance) error {
 	if err := r.getDB(ctx).Save(balance).Error; err != nil {
 		return fmt.Errorf("leave repository: update balance: %w", err)

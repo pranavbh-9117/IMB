@@ -1,3 +1,4 @@
+// Package repository provides data-access implementations for the authentication module.
 package repository
 
 import (

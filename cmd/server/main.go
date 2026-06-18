@@ -10,7 +10,8 @@
 package main
 
 import (
-	"log"
+	"context"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -33,44 +34,52 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/middleware"
 	"github.com/pranavbh-9117/IMB/internal/migration"
 	"github.com/pranavbh-9117/IMB/internal/seed"
-	"github.com/pranavbh-9117/IMB/pkg/config"
-	"github.com/pranavbh-9117/IMB/pkg/database"
-	"github.com/pranavbh-9117/IMB/pkg/response"
 	userhandler "github.com/pranavbh-9117/IMB/internal/user/handler"
 	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
 	userroutes "github.com/pranavbh-9117/IMB/internal/user/routes"
 	userservice "github.com/pranavbh-9117/IMB/internal/user/service"
+	"github.com/pranavbh-9117/IMB/pkg/config"
+	"github.com/pranavbh-9117/IMB/pkg/database"
+	"github.com/pranavbh-9117/IMB/pkg/logger"
 )
 
 func main() {
 	// 1. Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		os.Exit(1)
 	}
 
-	// 2. Initialize database
+	// 2. Initialize global logger
+	logger.Init(cfg.App.Env)
+	ctx := context.Background()
+
+	// 3. Initialize database
 	db, err := database.New(cfg.Database)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		logger.Error(ctx, "Failed to initialize database", "error", err)
+		os.Exit(1)
 	}
 
 	if err := database.HealthCheck(db); err != nil {
-		log.Fatalf("Database health check failed: %v", err)
+		logger.Error(ctx, "Database health check failed", "error", err)
+		os.Exit(1)
 	}
-	log.Println("Database connected successfully")
+	logger.Info(ctx, "Database connected successfully")
 
-	// 3. Run auto-migrations
+	// 4. Run auto-migrations
 	if err := migration.Run(db); err != nil {
-		log.Fatalf("Migration failed: %v", err)
+		logger.Error(ctx, "Migration failed", "error", err)
+		os.Exit(1)
 	}
-	log.Println("Database migration completed")
+	logger.Info(ctx, "Database migration completed")
 
-	// 4. Seed Super Admin
+	// 5. Seed Super Admin
 	if err := seed.Run(db, cfg.Seed); err != nil {
-		log.Fatalf("Seed failed: %v", err)
+		logger.Error(ctx, "Seed failed", "error", err)
+		os.Exit(1)
 	}
-	log.Println("Database seed completed")
+	logger.Info(ctx, "Database seed completed")
 
 	// 5. Instantiate Auth Module
 	userRepo := authrepo.NewUserRepository(db)
@@ -93,8 +102,11 @@ func main() {
 	userSvc := userservice.NewUserService(userManagementRepo, leaveSvc)
 	userHandler := userhandler.NewUserHandler(userSvc)
 
-	// 7. Initialize Gin Router
+	// Initialize Gin Router
 	r := gin.Default()
+
+	// Mount Request Logger
+	r.Use(middleware.RequestLogger())
 
 	// 8. API v1 Group
 	v1 := r.Group("/api/v1")
@@ -125,25 +137,7 @@ func main() {
 	leaveGroup.Use(authMiddleware)
 	leaveroutes.Register(leaveGroup, leaveHandler)
 
-	// 14. Register Protected Test Routes
-	protected := v1.Group("/")
-	protected.Use(authMiddleware)
 
-	protected.GET("/protected", func(c *gin.Context) {
-		response.OK(c, "you have accessed a protected route", nil)
-	})
-
-	protected.GET("/admin-only", middleware.RequireRoles(domain.RoleSuperAdmin), func(c *gin.Context) {
-		response.OK(c, "welcome, super admin", nil)
-	})
-
-	protected.GET("/faculty-only", middleware.RequireRoles(domain.RoleFaculty), func(c *gin.Context) {
-		response.OK(c, "welcome, faculty", nil)
-	})
-
-	protected.GET("/student-only", middleware.RequireRoles(domain.RoleStudent), func(c *gin.Context) {
-		response.OK(c, "welcome, student", nil)
-	})
 
 	// 13. Start Server
 	port := cfg.App.Port
@@ -151,8 +145,9 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Starting server on port %s...", port)
+	logger.Info(ctx, "Starting server", "port", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		logger.Error(ctx, "Failed to start server", "error", err)
+		os.Exit(1)
 	}
 }

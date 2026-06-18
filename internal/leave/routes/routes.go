@@ -1,3 +1,4 @@
+// Package routes provides routes functionality for the IMB platform.
 package routes
 
 import (

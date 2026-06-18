@@ -1,3 +1,4 @@
+// Package password provides password functionality for the IMB platform.
 package password
 
 import (

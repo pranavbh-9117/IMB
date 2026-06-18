@@ -1,3 +1,4 @@
+// Package jwtutil provides jwtutil functionality for the IMB platform.
 package jwtutil
 
 import (

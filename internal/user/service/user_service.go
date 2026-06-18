@@ -1,3 +1,4 @@
+// Package service provides service functionality for the IMB platform.
 package service
 
 import (
@@ -23,6 +24,7 @@ func NewUserService(repo repository.UserRepository, leaveInit LeaveInitializer) 
 	return &userService{repo: repo, leaveInit: leaveInit}
 }
 
+// Create implements the corresponding interface or provides the named functionality.
 func (s *userService) Create(ctx context.Context, creatorRole domain.Role, creatorInstID *uuid.UUID, user *domain.User) (*CreateResult, error) {
 	user.Name = strings.TrimSpace(user.Name)
 	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
@@ -96,6 +98,7 @@ func (s *userService) Create(ctx context.Context, creatorRole domain.Role, creat
 	}, nil
 }
 
+// GetByID implements the corresponding interface or provides the named functionality.
 func (s *userService) GetByID(ctx context.Context, requesterRole domain.Role, requesterInstID *uuid.UUID, targetID uuid.UUID) (*domain.User, error) {
 	if requesterRole != domain.RoleSuperAdmin && requesterRole != domain.RoleInstituteAdmin {
 		return nil, ErrUnauthorized
@@ -119,6 +122,7 @@ func (s *userService) GetByID(ctx context.Context, requesterRole domain.Role, re
 	return user, nil
 }
 
+// List implements the corresponding interface or provides the named functionality.
 func (s *userService) List(ctx context.Context, requesterRole domain.Role, requesterInstID *uuid.UUID, offset, limit int) ([]domain.User, error) {
 	if requesterRole != domain.RoleSuperAdmin && requesterRole != domain.RoleInstituteAdmin {
 		return nil, ErrUnauthorized
@@ -136,6 +140,7 @@ func (s *userService) List(ctx context.Context, requesterRole domain.Role, reque
 	return users, nil
 }
 
+// Update implements the corresponding interface or provides the named functionality.
 func (s *userService) Update(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID *uuid.UUID, targetID uuid.UUID, updates *domain.User) error {
 	// ADR-010: Prevent self management via this API
 	if requesterID == targetID {
@@ -198,6 +203,7 @@ func (s *userService) Update(ctx context.Context, requesterID uuid.UUID, request
 	return nil
 }
 
+// Delete implements the corresponding interface or provides the named functionality.
 func (s *userService) Delete(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID *uuid.UUID, targetID uuid.UUID) error {
 	// ADR-010: Prevent self management
 	if requesterID == targetID {

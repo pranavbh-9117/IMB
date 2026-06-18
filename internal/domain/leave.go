@@ -1,3 +1,4 @@
+// Package domain provides domain functionality for the IMB platform.
 package domain
 
 import (

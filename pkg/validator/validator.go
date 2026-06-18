@@ -1,3 +1,4 @@
+// Package validator provides validator functionality for the IMB platform.
 package validator
 
 import (

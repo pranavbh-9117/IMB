@@ -1,3 +1,4 @@
+// Package service provides service functionality for the IMB platform.
 package service
 
 import (
@@ -21,6 +22,7 @@ func NewInstitutionService(repo repository.InstitutionRepository) InstitutionSer
 	return &institutionService{repo: repo}
 }
 
+// Create implements the corresponding interface or provides the named functionality.
 func (s *institutionService) Create(ctx context.Context, inst *domain.Institution) error {
 	inst.Name = strings.TrimSpace(inst.Name)
 	inst.Code = strings.TrimSpace(inst.Code)
@@ -48,6 +50,7 @@ func (s *institutionService) Create(ctx context.Context, inst *domain.Institutio
 	return nil
 }
 
+// GetByID implements the corresponding interface or provides the named functionality.
 func (s *institutionService) GetByID(ctx context.Context, id uuid.UUID) (*domain.Institution, error) {
 	inst, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -59,6 +62,7 @@ func (s *institutionService) GetByID(ctx context.Context, id uuid.UUID) (*domain
 	return inst, nil
 }
 
+// List implements the corresponding interface or provides the named functionality.
 func (s *institutionService) List(ctx context.Context, offset, limit int) ([]domain.Institution, error) {
 	institutions, err := s.repo.List(ctx, offset, limit)
 	if err != nil {
@@ -67,6 +71,7 @@ func (s *institutionService) List(ctx context.Context, offset, limit int) ([]dom
 	return institutions, nil
 }
 
+// Update implements the corresponding interface or provides the named functionality.
 func (s *institutionService) Update(ctx context.Context, id uuid.UUID, updates *domain.Institution) error {
 	existing, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -97,6 +102,7 @@ func (s *institutionService) Update(ctx context.Context, id uuid.UUID, updates *
 	return nil
 }
 
+// Delete implements the corresponding interface or provides the named functionality.
 func (s *institutionService) Delete(ctx context.Context, id uuid.UUID) error {
 	// First check if it exists
 	_, err := s.repo.GetByID(ctx, id)

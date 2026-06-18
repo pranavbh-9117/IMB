@@ -1,3 +1,4 @@
+// Package service provides service functionality for the IMB platform.
 package service
 
 import (
@@ -21,6 +22,7 @@ func NewLeaveService(repo repository.LeaveRepository) LeaveService {
 	return &leaveService{repo: repo}
 }
 
+// InitializeBalance implements the corresponding interface or provides the named functionality.
 func (s *leaveService) InitializeBalance(ctx context.Context, userID, institutionID uuid.UUID, role domain.Role) error {
 	totalDays := 0
 	switch role {
@@ -49,6 +51,7 @@ func (s *leaveService) InitializeBalance(ctx context.Context, userID, institutio
 	return nil
 }
 
+// GetBalance implements the corresponding interface or provides the named functionality.
 func (s *leaveService) GetBalance(ctx context.Context, userID uuid.UUID) (*domain.LeaveBalance, error) {
 	balance, err := s.repo.GetBalanceByUserID(ctx, userID)
 	if err != nil {
@@ -60,6 +63,7 @@ func (s *leaveService) GetBalance(ctx context.Context, userID uuid.UUID) (*domai
 	return balance, nil
 }
 
+// ApplyLeave implements the corresponding interface or provides the named functionality.
 func (s *leaveService) ApplyLeave(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID uuid.UUID, req *domain.LeaveRequest) (*domain.LeaveRequest, error) {
 	// 1. Only Students and Faculty can apply
 	if requesterRole != domain.RoleStudent && requesterRole != domain.RoleFaculty {
@@ -115,6 +119,7 @@ func (s *leaveService) ApplyLeave(ctx context.Context, requesterID uuid.UUID, re
 	return req, nil
 }
 
+// ProcessLeaveApproval implements the corresponding interface or provides the named functionality.
 func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, reviewerID uuid.UUID, reviewerRole domain.Role, reviewerInstID uuid.UUID, newStatus domain.LeaveStatus, note string) error {
 	if newStatus != domain.LeaveStatusApproved && newStatus != domain.LeaveStatusRejected {
 		return fmt.Errorf("%w: invalid target status", ErrInvalidInput)
@@ -175,6 +180,7 @@ func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, revi
 	})
 }
 
+// GetLeaveDetails implements the corresponding interface or provides the named functionality.
 func (s *leaveService) GetLeaveDetails(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID uuid.UUID, requestID uuid.UUID) (*domain.LeaveRequest, error) {
 	req, err := s.repo.GetRequestByID(ctx, requestID)
 	if err != nil {
@@ -195,6 +201,7 @@ func (s *leaveService) GetLeaveDetails(ctx context.Context, requesterID uuid.UUI
 	return req, nil
 }
 
+// ListLeaves implements the corresponding interface or provides the named functionality.
 func (s *leaveService) ListLeaves(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID uuid.UUID, filter repository.RequestFilter, offset, limit int) ([]domain.LeaveRequest, error) {
 	// Tenant isolation is absolute
 	filter.InstitutionID = &requesterInstID
@@ -211,6 +218,7 @@ func (s *leaveService) ListLeaves(ctx context.Context, requesterID uuid.UUID, re
 	return requests, nil
 }
 
+// CancelLeave implements the corresponding interface or provides the named functionality.
 func (s *leaveService) CancelLeave(ctx context.Context, requesterID uuid.UUID, requestID uuid.UUID) error {
 	req, err := s.repo.GetRequestByID(ctx, requestID)
 	if err != nil {

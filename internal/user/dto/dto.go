@@ -1,3 +1,4 @@
+// Package dto provides dto functionality for the IMB platform.
 package dto
 
 import "time"

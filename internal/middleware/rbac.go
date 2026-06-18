@@ -1,3 +1,4 @@
+// Package middleware provides middleware functionality for the IMB platform.
 package middleware
 
 import (

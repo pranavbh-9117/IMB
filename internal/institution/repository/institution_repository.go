@@ -1,3 +1,4 @@
+// Package repository implements data access patterns for institutions.
 package repository
 
 import (
@@ -21,6 +22,7 @@ func NewInstitutionRepository(db *gorm.DB) InstitutionRepository {
 	return &institutionRepository{db: db}
 }
 
+// Create inserts a new institution record into the database.
 func (r *institutionRepository) Create(ctx context.Context, inst *domain.Institution) error {
 	if err := r.db.WithContext(ctx).Create(inst).Error; err != nil {
 		return fmt.Errorf("institution repository: create: %w", err)
@@ -28,6 +30,8 @@ func (r *institutionRepository) Create(ctx context.Context, inst *domain.Institu
 	return nil
 }
 
+// GetByID retrieves a single institution by its primary UUID.
+// It explicitly filters by is_active=true to enforce soft-delete boundaries.
 func (r *institutionRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Institution, error) {
 	var inst domain.Institution
 	err := r.db.WithContext(ctx).First(&inst, "id = ?", id).Error
@@ -40,6 +44,7 @@ func (r *institutionRepository) GetByID(ctx context.Context, id uuid.UUID) (*dom
 	return &inst, nil
 }
 
+// FindByCode looks up an active institution by its unique identifying code.
 func (r *institutionRepository) FindByCode(ctx context.Context, code string) (*domain.Institution, error) {
 	var inst domain.Institution
 	err := r.db.WithContext(ctx).First(&inst, "code = ?", code).Error
@@ -52,6 +57,7 @@ func (r *institutionRepository) FindByCode(ctx context.Context, code string) (*d
 	return &inst, nil
 }
 
+// List returns a paginated slice of active institutions.
 func (r *institutionRepository) List(ctx context.Context, offset, limit int) ([]domain.Institution, error) {
 	var institutions []domain.Institution
 	query := r.db.WithContext(ctx)
@@ -69,6 +75,7 @@ func (r *institutionRepository) List(ctx context.Context, offset, limit int) ([]
 	return institutions, nil
 }
 
+// Update persists changes to an existing institution record.
 func (r *institutionRepository) Update(ctx context.Context, inst *domain.Institution) error {
 	if err := r.db.WithContext(ctx).Save(inst).Error; err != nil {
 		return fmt.Errorf("institution repository: update: %w", err)
@@ -76,6 +83,7 @@ func (r *institutionRepository) Update(ctx context.Context, inst *domain.Institu
 	return nil
 }
 
+// Delete performs a soft-delete by toggling the is_active flag to false.
 func (r *institutionRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	err := r.db.WithContext(ctx).
 		Model(&domain.Institution{}).

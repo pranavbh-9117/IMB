@@ -1,3 +1,4 @@
+// Package service provides service functionality for the IMB platform.
 package service
 
 import (

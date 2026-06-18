@@ -1,3 +1,4 @@
+// Package domain provides domain functionality for the IMB platform.
 package domain
 
 import (
@@ -24,12 +25,12 @@ const (
 type User struct {
 	Base
 
-	Name          string     `gorm:"type:varchar(255);not null"`
-	Email         string     `gorm:"type:varchar(255);uniqueIndex;not null"`
-	PasswordHash  string     `gorm:"type:text"`
-	Role          Role       `gorm:"type:varchar(50);not null"`
-	InstitutionID *uuid.UUID `gorm:"type:uuid"`
-	Institution   *Institution `gorm:"foreignKey:InstitutionID"`
+	Name               string       `gorm:"type:varchar(255);not null"`
+	Email              string       `gorm:"type:varchar(255);uniqueIndex;not null"`
+	PasswordHash       string       `gorm:"type:text"`
+	Role               Role         `gorm:"type:varchar(50);not null"`
+	InstitutionID      *uuid.UUID   `gorm:"type:uuid"`
+	Institution        *Institution `gorm:"foreignKey:InstitutionID"`
 	GoogleID           string       `gorm:"type:varchar(255)"`
 	IsActive           bool         `gorm:"default:true"`
 	MustChangePassword bool         `gorm:"default:false"`

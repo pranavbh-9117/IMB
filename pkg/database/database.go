@@ -1,3 +1,4 @@
+// Package database provides database functionality for the IMB platform.
 package database
 
 import (

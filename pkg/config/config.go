@@ -1,3 +1,4 @@
+// Package config provides config functionality for the IMB platform.
 package config
 
 import (
@@ -20,6 +21,7 @@ type Config struct {
 // AppConfig holds HTTP server configuration.
 type AppConfig struct {
 	Port string
+	Env  string
 }
 
 // DatabaseConfig holds PostgreSQL connection parameters.
@@ -50,7 +52,7 @@ type SeedConfig struct {
 // variables are used directly without error. All variables are required; an
 // error is returned if any are missing or malformed.
 func Load() (*Config, error) {
-	
+
 	_ = godotenv.Load()
 
 	accessExpiry, err := parseDuration("JWT_ACCESS_EXPIRY")
@@ -66,6 +68,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		App: AppConfig{
 			Port: os.Getenv("APP_PORT"),
+			Env:  os.Getenv("APP_ENV"),
 		},
 		Database: DatabaseConfig{
 			Host:     os.Getenv("DB_HOST"),
@@ -101,6 +104,7 @@ func (c *Config) validate() error {
 		val string
 	}{
 		{"APP_PORT", c.App.Port},
+		{"APP_ENV", c.App.Env},
 		{"DB_HOST", c.Database.Host},
 		{"DB_PORT", c.Database.Port},
 		{"DB_USER", c.Database.User},

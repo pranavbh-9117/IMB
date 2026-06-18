@@ -1,3 +1,4 @@
+// Package seed provides seed functionality for the IMB platform.
 package seed
 
 import (

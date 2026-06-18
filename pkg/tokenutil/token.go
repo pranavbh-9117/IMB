@@ -1,3 +1,4 @@
+// Package tokenutil provides tokenutil functionality for the IMB platform.
 package tokenutil
 
 import (

@@ -29,9 +29,11 @@ profile.cov
 go.work
 go.work.sum
 
-
+#Internal docs
+/docs/adr.md
+/docs/architecture.md
+/docs/PROJECT_PLAN.md
+/docs/workflows.md
 API_TEST_COMMANDS.md
-
 api_test_results.txt
-
 server.log

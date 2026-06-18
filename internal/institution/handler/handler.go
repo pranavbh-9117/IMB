@@ -1,3 +1,4 @@
+// Package handler provides handler functionality for the IMB platform.
 package handler
 
 import (
