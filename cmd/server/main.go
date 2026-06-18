@@ -5,11 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/pranavbh-9117/IMB/internal/auth/handler"
-	"github.com/pranavbh-9117/IMB/internal/auth/repository"
-	"github.com/pranavbh-9117/IMB/internal/auth/routes"
-	"github.com/pranavbh-9117/IMB/internal/auth/service"
+	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
+	authrepo "github.com/pranavbh-9117/IMB/internal/auth/repository"
+	authroutes "github.com/pranavbh-9117/IMB/internal/auth/routes"
+	authservice "github.com/pranavbh-9117/IMB/internal/auth/service"
 	"github.com/pranavbh-9117/IMB/internal/domain"
+	insthandler "github.com/pranavbh-9117/IMB/internal/institution/handler"
+	instrepo "github.com/pranavbh-9117/IMB/internal/institution/repository"
+	instroutes "github.com/pranavbh-9117/IMB/internal/institution/routes"
+	instservice "github.com/pranavbh-9117/IMB/internal/institution/service"
 	"github.com/pranavbh-9117/IMB/internal/middleware"
 	"github.com/pranavbh-9117/IMB/internal/migration"
 	"github.com/pranavbh-9117/IMB/internal/seed"
@@ -48,28 +52,35 @@ func main() {
 	}
 	log.Println("Database seed completed")
 
-	// 5. Instantiate Auth Repositories
-	userRepo := repository.NewUserRepository(db)
-	tokenRepo := repository.NewRefreshTokenRepository(db)
+	// 5. Instantiate Auth Module
+	userRepo := authrepo.NewUserRepository(db)
+	tokenRepo := authrepo.NewRefreshTokenRepository(db)
+	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT)
+	authHandler := authhandler.NewAuthHandler(authSvc, cfg.JWT)
 
-	// 6. Instantiate Auth Service
-	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.JWT)
+	// 6. Instantiate Institution Module
+	institutionRepo := instrepo.NewInstitutionRepository(db)
+	institutionSvc := instservice.NewInstitutionService(institutionRepo)
+	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
 
-	// 7. Instantiate Auth Handler
-	authHandler := handler.NewAuthHandler(authSvc, cfg.JWT)
-
-	// 8. Initialize Gin Router
+	// 7. Initialize Gin Router
 	r := gin.Default()
 
-	// 9. API v1 Group
+	// 8. API v1 Group
 	v1 := r.Group("/api/v1")
 
-	// 10. Instantiate Auth Middleware
+	// 9. Instantiate Middlewares
 	authMiddleware := middleware.RequireAuth(cfg.JWT.Secret)
+	superAdminMiddleware := middleware.RequireRoles(domain.RoleSuperAdmin)
 
-	// 11. Register Public Auth Routes
+	// 10. Register Auth Routes
 	authGroup := v1.Group("/auth")
-	routes.Register(authGroup, authHandler, authMiddleware)
+	authroutes.Register(authGroup, authHandler, authMiddleware)
+
+	// 11. Register Institution Routes (Protected by Auth & Super Admin)
+	instGroup := v1.Group("/institutions")
+	instGroup.Use(authMiddleware, superAdminMiddleware)
+	instroutes.Register(instGroup, institutionHandler)
 
 	// 12. Register Protected Test Routes
 	protected := v1.Group("/")
