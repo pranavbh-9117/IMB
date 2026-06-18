@@ -20,6 +20,10 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/config"
 	"github.com/pranavbh-9117/IMB/pkg/database"
 	"github.com/pranavbh-9117/IMB/pkg/response"
+	userhandler "github.com/pranavbh-9117/IMB/internal/user/handler"
+	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
+	userroutes "github.com/pranavbh-9117/IMB/internal/user/routes"
+	userservice "github.com/pranavbh-9117/IMB/internal/user/service"
 )
 
 func main() {
@@ -63,6 +67,11 @@ func main() {
 	institutionSvc := instservice.NewInstitutionService(institutionRepo)
 	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
 
+	// 7. Instantiate User Module
+	userManagementRepo := userrepo.NewUserRepository(db)
+	userSvc := userservice.NewUserService(userManagementRepo)
+	userHandler := userhandler.NewUserHandler(userSvc)
+
 	// 7. Initialize Gin Router
 	r := gin.Default()
 
@@ -82,7 +91,12 @@ func main() {
 	instGroup.Use(authMiddleware, superAdminMiddleware)
 	instroutes.Register(instGroup, institutionHandler)
 
-	// 12. Register Protected Test Routes
+	// 12. Register User Routes (Protected by Auth & Super/Institute Admin)
+	userGroup := v1.Group("/users")
+	userGroup.Use(authMiddleware, middleware.RequireRoles(domain.RoleSuperAdmin, domain.RoleInstituteAdmin))
+	userroutes.Register(userGroup, userHandler)
+
+	// 13. Register Protected Test Routes
 	protected := v1.Group("/")
 	protected.Use(authMiddleware)
 

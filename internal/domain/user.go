@@ -30,8 +30,9 @@ type User struct {
 	Role          Role       `gorm:"type:varchar(50);not null"`
 	InstitutionID *uuid.UUID `gorm:"type:uuid"`
 	Institution   *Institution `gorm:"foreignKey:InstitutionID"`
-	GoogleID      string     `gorm:"type:varchar(255)"`
-	IsActive      bool       `gorm:"default:true"`
+	GoogleID           string       `gorm:"type:varchar(255)"`
+	IsActive           bool         `gorm:"default:true"`
+	MustChangePassword bool         `gorm:"default:false"`
 }
 
 // RefreshToken stores a hashed refresh token issued to a user. The raw token
