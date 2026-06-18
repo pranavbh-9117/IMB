@@ -31,3 +31,8 @@ go.work.sum
 
 
 API_TEST_COMMANDS.md
+
+/scripts
+api_test_results.txt
+
+server.log

@@ -14,12 +14,13 @@ import (
 )
 
 type userService struct {
-	repo repository.UserRepository
+	repo      repository.UserRepository
+	leaveInit LeaveInitializer
 }
 
 // NewUserService creates a new UserService to enforce user management business rules.
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo}
+func NewUserService(repo repository.UserRepository, leaveInit LeaveInitializer) UserService {
+	return &userService{repo: repo, leaveInit: leaveInit}
 }
 
 func (s *userService) Create(ctx context.Context, creatorRole domain.Role, creatorInstID *uuid.UUID, user *domain.User) (*CreateResult, error) {
@@ -79,6 +80,14 @@ func (s *userService) Create(ctx context.Context, creatorRole domain.Role, creat
 
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, fmt.Errorf("user service: create: %w", err)
+	}
+
+	// Trigger Leave Balance Initialization if the dependency is provided
+	if s.leaveInit != nil && user.InstitutionID != nil {
+		if err := s.leaveInit.InitializeBalance(ctx, user.ID, *user.InstitutionID, user.Role); err != nil {
+			// In Phase 5, we log the error but do not fail the user creation.
+			fmt.Printf("Warning: failed to initialize leave balance for user %s: %v\n", user.ID, err)
+		}
 	}
 
 	return &CreateResult{

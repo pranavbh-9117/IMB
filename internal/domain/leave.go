@@ -10,9 +10,10 @@ import (
 type LeaveStatus string
 
 const (
-	LeaveStatusPending  LeaveStatus = "pending"
-	LeaveStatusApproved LeaveStatus = "approved"
-	LeaveStatusRejected LeaveStatus = "rejected"
+	LeaveStatusPending   LeaveStatus = "pending"
+	LeaveStatusApproved  LeaveStatus = "approved"
+	LeaveStatusRejected  LeaveStatus = "rejected"
+	LeaveStatusCancelled LeaveStatus = "cancelled"
 )
 
 // LeaveBalance tracks the total allocated leave days and how many have been

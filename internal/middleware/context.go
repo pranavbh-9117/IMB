@@ -63,15 +63,11 @@ func GetInstitutionID(c *gin.Context) (*uuid.UUID, error) {
 		return nil, ErrContextValueMissing
 	}
 
-	// Super admins will explicitly have a nil pointer in the context.
-	if val == nil {
-		return nil, nil
-	}
-
-	id, ok := val.(uuid.UUID)
+	// Since auth.go sets a *uuid.UUID, we must assert it as a pointer.
+	instID, ok := val.(*uuid.UUID)
 	if !ok {
-		return nil, errors.New("institution ID in context is not a valid UUID")
+		return nil, errors.New("institution ID in context is not a valid *uuid.UUID")
 	}
 
-	return &id, nil
+	return instID, nil
 }

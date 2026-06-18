@@ -26,6 +26,12 @@ type CreateResult struct {
 	TempPassword string
 }
 
+// LeaveInitializer defines the contract for initializing a user's leave balance
+// upon account creation, abstracting away the concrete LeaveService.
+type LeaveInitializer interface {
+	InitializeBalance(ctx context.Context, userID, institutionID uuid.UUID, role domain.Role) error
+}
+
 // UserService defines the business logic contract for user management operations.
 type UserService interface {
 	// Create generates a user enforcing ADR-005 and ADR-006 hierarchy. Returns a temp password.

@@ -14,6 +14,10 @@ import (
 	instrepo "github.com/pranavbh-9117/IMB/internal/institution/repository"
 	instroutes "github.com/pranavbh-9117/IMB/internal/institution/routes"
 	instservice "github.com/pranavbh-9117/IMB/internal/institution/service"
+	leavehandler "github.com/pranavbh-9117/IMB/internal/leave/handler"
+	leaverepo "github.com/pranavbh-9117/IMB/internal/leave/repository"
+	leaveroutes "github.com/pranavbh-9117/IMB/internal/leave/routes"
+	leaveservice "github.com/pranavbh-9117/IMB/internal/leave/service"
 	"github.com/pranavbh-9117/IMB/internal/middleware"
 	"github.com/pranavbh-9117/IMB/internal/migration"
 	"github.com/pranavbh-9117/IMB/internal/seed"
@@ -67,9 +71,14 @@ func main() {
 	institutionSvc := instservice.NewInstitutionService(institutionRepo)
 	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
 
-	// 7. Instantiate User Module
+	// 7. Instantiate Leave Module
+	leaveRepo := leaverepo.NewLeaveRepository(db)
+	leaveSvc := leaveservice.NewLeaveService(leaveRepo)
+	leaveHandler := leavehandler.NewLeaveHandler(leaveSvc)
+
+	// 8. Instantiate User Module (Injected with LeaveInitializer)
 	userManagementRepo := userrepo.NewUserRepository(db)
-	userSvc := userservice.NewUserService(userManagementRepo)
+	userSvc := userservice.NewUserService(userManagementRepo, leaveSvc)
 	userHandler := userhandler.NewUserHandler(userSvc)
 
 	// 7. Initialize Gin Router
@@ -96,7 +105,12 @@ func main() {
 	userGroup.Use(authMiddleware, middleware.RequireRoles(domain.RoleSuperAdmin, domain.RoleInstituteAdmin))
 	userroutes.Register(userGroup, userHandler)
 
-	// 13. Register Protected Test Routes
+	// 13. Register Leave Routes (Protected by Auth)
+	leaveGroup := v1.Group("/leaves")
+	leaveGroup.Use(authMiddleware)
+	leaveroutes.Register(leaveGroup, leaveHandler)
+
+	// 14. Register Protected Test Routes
 	protected := v1.Group("/")
 	protected.Use(authMiddleware)
 
