@@ -1,10 +1,22 @@
+// @title Institute Management Backend API
+// @version 1.0
+// @description API documentation for the Institute Management Platform.
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 package main
 
 import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	_ "github.com/pranavbh-9117/IMB/docs"
 	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
 	authrepo "github.com/pranavbh-9117/IMB/internal/auth/repository"
 	authroutes "github.com/pranavbh-9117/IMB/internal/auth/routes"
@@ -87,7 +99,10 @@ func main() {
 	// 8. API v1 Group
 	v1 := r.Group("/api/v1")
 
-	// 9. Instantiate Middlewares
+	// 9. Register Swagger UI (Public)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// 10. Instantiate Middlewares
 	authMiddleware := middleware.RequireAuth(cfg.JWT.Secret)
 	superAdminMiddleware := middleware.RequireRoles(domain.RoleSuperAdmin)
 

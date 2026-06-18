@@ -30,9 +30,16 @@ func NewAuthHandler(svc service.AuthService, cfg config.JWTConfig) *AuthHandler 
 }
 
 // Login godoc
-// POST /api/v1/auth/login
-// Verifies email+password, issues an access token in the JSON body and a
-// refresh token in an HttpOnly cookie.
+// @Summary User Login
+// @Description Authenticates a user and returns a JWT access token in the body and a refresh token in an HttpOnly cookie.
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login Credentials"
+// @Success 200 {object} response.SwaggerResponse[dto.LoginResponse] "Login Successful"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,9 +67,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Refresh godoc
-// POST /api/v1/auth/refresh
-// Reads the refresh token from the HttpOnly cookie, rotates it, and returns
-// a new access token in the JSON body and a new refresh token in the cookie.
+// @Summary Refresh Token
+// @Description Reads the refresh token from the HttpOnly cookie, rotates it, and returns a new access token.
+// @Tags Authentication
+// @Produce json
+// @Success 200 {object} response.SwaggerResponse[dto.RefreshResponse] "Token Refreshed"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Router /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	rawToken, err := c.Cookie(refreshTokenCookie)
 	if err != nil {
@@ -84,9 +95,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 // Logout godoc
-// POST /api/v1/auth/logout
-// Reads the refresh token from the HttpOnly cookie, revokes it, and clears
-// the cookie.
+// @Summary User Logout
+// @Description Revokes the refresh token and clears the HttpOnly cookie.
+// @Tags Authentication
+// @Produce json
+// @Success 200 {object} response.SwaggerResponse[any] "Logout Successful"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	rawToken, err := c.Cookie(refreshTokenCookie)
 	if err != nil {
@@ -105,10 +120,17 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // ChangePassword godoc
-// POST /api/v1/auth/change-password
-// Delegates password replacement to the auth service. The caller's identity
-// must be populated in the context by the RequireAuth middleware. All active
-// sessions are revoked on success.
+// @Summary Change Password
+// @Description Changes the authenticated user's password and revokes all active sessions.
+// @Tags Authentication
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.ChangePasswordRequest true "Change Password Payload"
+// @Success 200 {object} response.SwaggerResponse[any] "Password Changed Successfully"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {

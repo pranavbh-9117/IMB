@@ -26,7 +26,19 @@ func NewUserHandler(svc service.UserService) *UserHandler {
 }
 
 // Create godoc
-// POST /api/v1/users
+// @Summary Create User
+// @Description Creates a new user (Institute Admin, Faculty, or Student). Accessible by Super Admin and Institute Admin.
+// @Tags User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateRequest true "User Details"
+// @Success 201 {object} response.SwaggerResponse[dto.CreateResponse] "User Created with Temporary Password"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 409 {object} response.SwaggerErrorResponse "Conflict"
+// @Router /users [post]
 func (h *UserHandler) Create(c *gin.Context) {
 	var req dto.CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -76,7 +88,18 @@ func (h *UserHandler) Create(c *gin.Context) {
 }
 
 // GetByID godoc
-// GET /api/v1/users/:id
+// @Summary Get User
+// @Description Retrieves a user by their UUID.
+// @Tags User
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} response.SwaggerResponse[dto.UserResponse] "User Retrieved"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /users/{id} [get]
 func (h *UserHandler) GetByID(c *gin.Context) {
 	idParam := c.Param("id")
 	targetID, err := uuid.Parse(idParam)
@@ -107,7 +130,18 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 }
 
 // List godoc
-// GET /api/v1/users
+// @Summary List Users
+// @Description Retrieves a paginated list of users within the caller's authorized tenant scope.
+// @Tags User
+// @Security BearerAuth
+// @Produce json
+// @Param offset query int false "Pagination offset" default(0)
+// @Param limit query int false "Pagination limit" default(10)
+// @Success 200 {object} response.SwaggerResponse[[]dto.UserResponse] "Users Retrieved"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Router /users [get]
 func (h *UserHandler) List(c *gin.Context) {
 	offsetStr := c.DefaultQuery("offset", "0")
 	offset, err := strconv.Atoi(offsetStr)
@@ -150,7 +184,21 @@ func (h *UserHandler) List(c *gin.Context) {
 }
 
 // Update godoc
-// PUT /api/v1/users/:id
+// @Summary Update User
+// @Description Partially updates a user's name or email. Roles cannot be changed.
+// @Tags User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param request body dto.UpdateRequest true "Update Payload"
+// @Success 200 {object} response.SwaggerResponse[dto.UserResponse] "User Updated"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Failure 409 {object} response.SwaggerErrorResponse "Conflict"
+// @Router /users/{id} [put]
 func (h *UserHandler) Update(c *gin.Context) {
 	idParam := c.Param("id")
 	targetID, err := uuid.Parse(idParam)
@@ -213,7 +261,18 @@ func (h *UserHandler) Update(c *gin.Context) {
 }
 
 // Delete godoc
-// DELETE /api/v1/users/:id
+// @Summary Delete User
+// @Description Deactivates a user by UUID. Self-deletion and Super Admin deletion are blocked.
+// @Tags User
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} response.SwaggerResponse[any] "User Deleted"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /users/{id} [delete]
 func (h *UserHandler) Delete(c *gin.Context) {
 	idParam := c.Param("id")
 	targetID, err := uuid.Parse(idParam)

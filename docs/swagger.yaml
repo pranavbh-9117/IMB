@@ -1,0 +1,1009 @@
+basePath: /api/v1
+definitions:
+  github_com_pranavbh-9117_IMB_internal_auth_dto.ChangePasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  github_com_pranavbh-9117_IMB_internal_auth_dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_pranavbh-9117_IMB_internal_auth_dto.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.UserResponse'
+    type: object
+  github_com_pranavbh-9117_IMB_internal_auth_dto.RefreshResponse:
+    properties:
+      access_token:
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_auth_dto.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_institution_dto.CreateRequest:
+    properties:
+      address:
+        type: string
+      code:
+        maxLength: 50
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  github_com_pranavbh-9117_IMB_internal_institution_dto.InstitutionResponse:
+    properties:
+      address:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateRequest:
+    properties:
+      address:
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_leave_dto.ApplyLeaveRequest:
+    properties:
+      end_date:
+        type: string
+      reason:
+        maxLength: 500
+        type: string
+      start_date:
+        type: string
+    required:
+    - end_date
+    - reason
+    - start_date
+    type: object
+  github_com_pranavbh-9117_IMB_internal_leave_dto.LeaveResponse:
+    properties:
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      institution_id:
+        type: string
+      reason:
+        type: string
+      review_note:
+        type: string
+      reviewed_at:
+        type: string
+      reviewed_by:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_leave_dto.ProcessLeaveRequest:
+    properties:
+      note:
+        description: Optional comment
+        maxLength: 500
+        type: string
+      status:
+        enum:
+        - approved
+        - rejected
+        type: string
+    required:
+    - status
+    type: object
+  github_com_pranavbh-9117_IMB_internal_user_dto.CreateRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      institution_id:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      role:
+        enum:
+        - institute_admin
+        - faculty
+        - student
+        type: string
+    required:
+    - email
+    - name
+    - role
+    type: object
+  github_com_pranavbh-9117_IMB_internal_user_dto.CreateResponse:
+    properties:
+      temporary_password:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_user_dto.UserResponse'
+    type: object
+  github_com_pranavbh-9117_IMB_internal_user_dto.UpdateRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      role:
+        description: Present to detect and reject modifications
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_user_dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      institution_id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse:
+    properties:
+      data: {}
+      message:
+        example: error description
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any:
+    properties:
+      data: {}
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  ? github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse
+  : properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.InstitutionResponse'
+        type: array
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_leave_dto_LeaveResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_leave_dto.LeaveResponse'
+        type: array
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_user_dto_UserResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_user_dto.UserResponse'
+        type: array
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_auth_dto_LoginResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.LoginResponse'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_auth_dto_RefreshResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.RefreshResponse'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  ? github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse
+  : properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.InstitutionResponse'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_leave_dto_LeaveResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_leave_dto.LeaveResponse'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_user_dto_CreateResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_user_dto.CreateResponse'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_user_dto_UserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_user_dto.UserResponse'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API documentation for the Institute Management Platform.
+  title: Institute Management Backend API
+  version: "1.0"
+paths:
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Changes the authenticated user's password and revokes all active
+        sessions.
+      parameters:
+      - description: Change Password Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password Changed Successfully
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change Password
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT access token in the body
+        and a refresh token in an HttpOnly cookie.
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login Successful
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_auth_dto_LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      summary: User Login
+      tags:
+      - Authentication
+  /auth/logout:
+    post:
+      description: Revokes the refresh token and clears the HttpOnly cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout Successful
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      summary: User Logout
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      description: Reads the refresh token from the HttpOnly cookie, rotates it, and
+        returns a new access token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token Refreshed
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_auth_dto_RefreshResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      summary: Refresh Token
+      tags:
+      - Authentication
+  /institutions:
+    get:
+      description: Retrieves a paginated list of institutions. Accessible only by
+        Super Admin.
+      parameters:
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      - default: 10
+        description: Pagination limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institutions Retrieved
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Institutions
+      tags:
+      - Institution
+    post:
+      consumes:
+      - application/json
+      description: Creates a new institution. Accessible only by Super Admin.
+      parameters:
+      - description: Institution Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Institution Created
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Institution
+      tags:
+      - Institution
+  /institutions/{id}:
+    delete:
+      description: Soft-deletes an institution by its UUID. Accessible only by Super
+        Admin.
+      parameters:
+      - description: Institution ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institution Deleted
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Institution
+      tags:
+      - Institution
+    get:
+      description: Retrieves an institution by its UUID. Accessible only by Super
+        Admin.
+      parameters:
+      - description: Institution ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institution Retrieved
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Institution
+      tags:
+      - Institution
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates an institution. Accessible only by Super Admin.
+      parameters:
+      - description: Institution ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institution Updated
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Institution
+      tags:
+      - Institution
+  /leaves:
+    get:
+      description: Retrieves a paginated list of leaves. Pass '?view=approvals' to
+        see leaves pending your review.
+      parameters:
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      - default: 10
+        description: Pagination limit
+        in: query
+        name: limit
+        type: integer
+      - description: View mode (approvals or empty)
+        in: query
+        name: view
+        type: string
+      - description: Filter by status (pending, approved, rejected, cancelled)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Leaves Retrieved
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_leave_dto_LeaveResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Leaves
+      tags:
+      - Leave
+    post:
+      consumes:
+      - application/json
+      description: Submits a new leave request. Allowed for Faculty and Students.
+      parameters:
+      - description: Leave Request Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_leave_dto.ApplyLeaveRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Leave Request Submitted
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_leave_dto_LeaveResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "409":
+          description: Conflict (Overlap)
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Apply for Leave
+      tags:
+      - Leave
+  /leaves/{id}:
+    delete:
+      description: Cancels a pending leave request belonging to the caller.
+      parameters:
+      - description: Leave Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Leave Cancelled
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel Leave
+      tags:
+      - Leave
+    put:
+      consumes:
+      - application/json
+      description: Approves or rejects a leave request. Enforces hierarchical RBAC
+        (Faculty approves Student, Inst Admin approves Faculty).
+      parameters:
+      - description: Leave Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Process Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_leave_dto.ProcessLeaveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Leave Request Processed
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_leave_dto_LeaveResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Process Leave Request
+      tags:
+      - Leave
+  /users:
+    get:
+      description: Retrieves a paginated list of users within the caller's authorized
+        tenant scope.
+      parameters:
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      - default: 10
+        description: Pagination limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users Retrieved
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_user_dto_UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Users
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user (Institute Admin, Faculty, or Student). Accessible
+        by Super Admin and Institute Admin.
+      parameters:
+      - description: User Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_user_dto.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User Created with Temporary Password
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_user_dto_CreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create User
+      tags:
+      - User
+  /users/{id}:
+    delete:
+      description: Deactivates a user by UUID. Self-deletion and Super Admin deletion
+        are blocked.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User Deleted
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - User
+    get:
+      description: Retrieves a user by their UUID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User Retrieved
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_user_dto_UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Partially updates a user's name or email. Roles cannot be changed.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_user_dto.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User Updated
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_user_dto_UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update User
+      tags:
+      - User
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

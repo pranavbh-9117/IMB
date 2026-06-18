@@ -27,7 +27,19 @@ func NewLeaveHandler(svc service.LeaveService) *LeaveHandler {
 }
 
 // ApplyLeave godoc
-// POST /api/v1/leaves
+// @Summary Apply for Leave
+// @Description Submits a new leave request. Allowed for Faculty and Students.
+// @Tags Leave
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.ApplyLeaveRequest true "Leave Request Details"
+// @Success 201 {object} response.SwaggerResponse[dto.LeaveResponse] "Leave Request Submitted"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 409 {object} response.SwaggerErrorResponse "Conflict (Overlap)"
+// @Router /leaves [post]
 func (h *LeaveHandler) ApplyLeave(c *gin.Context) {
 	var req dto.ApplyLeaveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -69,7 +81,20 @@ func (h *LeaveHandler) ApplyLeave(c *gin.Context) {
 }
 
 // ProcessLeave godoc
-// PUT /api/v1/leaves/:id
+// @Summary Process Leave Request
+// @Description Approves or rejects a leave request. Enforces hierarchical RBAC (Faculty approves Student, Inst Admin approves Faculty).
+// @Tags Leave
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Leave Request ID"
+// @Param request body dto.ProcessLeaveRequest true "Process Details"
+// @Success 200 {object} response.SwaggerResponse[dto.LeaveResponse] "Leave Request Processed"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /leaves/{id} [put]
 func (h *LeaveHandler) ProcessLeave(c *gin.Context) {
 	idParam := c.Param("id")
 	requestID, err := uuid.Parse(idParam)
@@ -118,7 +143,19 @@ func (h *LeaveHandler) ProcessLeave(c *gin.Context) {
 }
 
 // ListLeaves godoc
-// GET /api/v1/leaves
+// @Summary List Leaves
+// @Description Retrieves a paginated list of leaves. Pass '?view=approvals' to see leaves pending your review.
+// @Tags Leave
+// @Security BearerAuth
+// @Produce json
+// @Param offset query int false "Pagination offset" default(0)
+// @Param limit query int false "Pagination limit" default(10)
+// @Param view query string false "View mode (approvals or empty)"
+// @Param status query string false "Filter by status (pending, approved, rejected, cancelled)"
+// @Success 200 {object} response.SwaggerResponse[[]dto.LeaveResponse] "Leaves Retrieved"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Router /leaves [get]
 func (h *LeaveHandler) ListLeaves(c *gin.Context) {
 	offsetStr := c.DefaultQuery("offset", "0")
 	offset, err := strconv.Atoi(offsetStr)
@@ -183,7 +220,18 @@ func (h *LeaveHandler) ListLeaves(c *gin.Context) {
 }
 
 // CancelLeave godoc
-// DELETE /api/v1/leaves/:id
+// @Summary Cancel Leave
+// @Description Cancels a pending leave request belonging to the caller.
+// @Tags Leave
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Leave Request ID"
+// @Success 200 {object} response.SwaggerResponse[any] "Leave Cancelled"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /leaves/{id} [delete]
 func (h *LeaveHandler) CancelLeave(c *gin.Context) {
 	idParam := c.Param("id")
 	requestID, err := uuid.Parse(idParam)

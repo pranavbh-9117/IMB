@@ -25,7 +25,19 @@ func NewInstitutionHandler(svc service.InstitutionService) *InstitutionHandler {
 }
 
 // Create godoc
-// POST /api/v1/institutions
+// @Summary Create Institution
+// @Description Creates a new institution. Accessible only by Super Admin.
+// @Tags Institution
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateRequest true "Institution Details"
+// @Success 201 {object} response.SwaggerResponse[dto.InstitutionResponse] "Institution Created"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 409 {object} response.SwaggerErrorResponse "Conflict"
+// @Router /institutions [post]
 func (h *InstitutionHandler) Create(c *gin.Context) {
 	var req dto.CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,7 +62,18 @@ func (h *InstitutionHandler) Create(c *gin.Context) {
 }
 
 // GetByID godoc
-// GET /api/v1/institutions/:id
+// @Summary Get Institution
+// @Description Retrieves an institution by its UUID. Accessible only by Super Admin.
+// @Tags Institution
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Institution ID"
+// @Success 200 {object} response.SwaggerResponse[dto.InstitutionResponse] "Institution Retrieved"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /institutions/{id} [get]
 func (h *InstitutionHandler) GetByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)
@@ -69,7 +92,18 @@ func (h *InstitutionHandler) GetByID(c *gin.Context) {
 }
 
 // List godoc
-// GET /api/v1/institutions
+// @Summary List Institutions
+// @Description Retrieves a paginated list of institutions. Accessible only by Super Admin.
+// @Tags Institution
+// @Security BearerAuth
+// @Produce json
+// @Param offset query int false "Pagination offset" default(0)
+// @Param limit query int false "Pagination limit" default(10)
+// @Success 200 {object} response.SwaggerResponse[[]dto.InstitutionResponse] "Institutions Retrieved"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Router /institutions [get]
 func (h *InstitutionHandler) List(c *gin.Context) {
 	// Parse offset, default to 0
 	offsetStr := c.DefaultQuery("offset", "0")
@@ -103,7 +137,20 @@ func (h *InstitutionHandler) List(c *gin.Context) {
 }
 
 // Update godoc
-// PATCH /api/v1/institutions/:id
+// @Summary Update Institution
+// @Description Partially updates an institution. Accessible only by Super Admin.
+// @Tags Institution
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Institution ID"
+// @Param request body dto.UpdateRequest true "Update Payload"
+// @Success 200 {object} response.SwaggerResponse[dto.InstitutionResponse] "Institution Updated"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /institutions/{id} [patch]
 func (h *InstitutionHandler) Update(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)
@@ -154,7 +201,18 @@ func (h *InstitutionHandler) Update(c *gin.Context) {
 }
 
 // Delete godoc
-// DELETE /api/v1/institutions/:id
+// @Summary Delete Institution
+// @Description Soft-deletes an institution by its UUID. Accessible only by Super Admin.
+// @Tags Institution
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Institution ID"
+// @Success 200 {object} response.SwaggerResponse[any] "Institution Deleted"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Router /institutions/{id} [delete]
 func (h *InstitutionHandler) Delete(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)

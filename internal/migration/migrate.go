@@ -29,21 +29,6 @@ func Run(db *gorm.DB) error {
 		// Tier 4 — depends on User + Institution
 		&domain.LeaveBalance{},
 		&domain.LeaveRequest{},
-
-		// Tier 5 — depends on Institution + User
-		&domain.Quiz{},
-
-		// Tier 6 — depends on Quiz
-		&domain.Question{},
-
-		// Tier 7 — depends on Question
-		&domain.Option{},
-
-		// Tier 8 — depends on Quiz + User
-		&domain.QuizAttempt{},
-
-		// Tier 9 — depends on QuizAttempt + Question + Option
-		&domain.QuizAnswer{},
 	)
 	if err != nil {
 		return fmt.Errorf("migration: auto-migrate failed: %w", err)
