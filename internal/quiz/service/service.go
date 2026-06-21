@@ -11,7 +11,6 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/apperror"
 )
 
-// Sentinel errors
 var (
 	ErrQuizNotFound         = apperror.NotFound("quiz not found")
 	ErrUnauthorizedQuiz     = apperror.Forbidden("you do not have permission to manage this quiz")

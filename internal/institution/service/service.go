@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/pranavbh-9117/IMB/internal/domain"
+	"github.com/pranavbh-9117/IMB/internal/institution/dto"
 )
 
 var (
@@ -26,7 +27,7 @@ type InstitutionService interface {
 
 	List(ctx context.Context, offset, limit int) ([]domain.Institution, error)
 
-	Update(ctx context.Context, id uuid.UUID, updates *domain.Institution) error
+	Update(ctx context.Context, id uuid.UUID, input *dto.UpdateInstitutionInput) (*domain.Institution, error)
 
 	Delete(ctx context.Context, id uuid.UUID) error
 }

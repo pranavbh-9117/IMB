@@ -16,7 +16,7 @@ type quizRepository struct {
 	db *gorm.DB
 }
 
-// NewQuizRepository creates a new instance of QuizRepository.
+
 func NewQuizRepository(db *gorm.DB) QuizRepository {
 	return &quizRepository{db: db}
 }

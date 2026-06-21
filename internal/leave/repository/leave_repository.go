@@ -19,7 +19,7 @@ type leaveRepository struct {
 	db *gorm.DB
 }
 
-// NewLeaveRepository creates a new LeaveRepository backed by GORM.
+
 func NewLeaveRepository(db *gorm.DB) LeaveRepository {
 	return &leaveRepository{db: db}
 }

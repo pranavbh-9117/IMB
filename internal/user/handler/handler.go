@@ -16,12 +16,12 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/validator"
 )
 
-// UserHandler processes HTTP requests for user management.
+
 type UserHandler struct {
 	svc service.UserService
 }
 
-// NewUserHandler creates a new UserHandler.
+
 func NewUserHandler(svc service.UserService) *UserHandler {
 	return &UserHandler{svc: svc}
 }
@@ -308,7 +308,6 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	response.OK(c, "user deleted successfully", nil)
 }
 
-// --- private helpers ---
 
 func (h *UserHandler) mapToResponse(user *domain.User) dto.UserResponse {
 	resp := dto.UserResponse{
@@ -339,7 +338,7 @@ func (h *UserHandler) handleServiceError(c *gin.Context, err error) {
 	case errors.Is(err, service.ErrDuplicateEmail):
 		response.Conflict(c, err.Error())
 	case errors.Is(err, service.ErrUserNotFound):
-		response.NotFound(c, err.Error()) // Handled explicitly as 404 per ADR-009
+		response.NotFound(c, err.Error()) 
 	case errors.Is(err, service.ErrUnauthorized):
 		response.Forbidden(c, err.Error())
 	case errors.Is(err, service.ErrInvalidRole):

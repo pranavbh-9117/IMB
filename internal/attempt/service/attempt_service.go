@@ -19,7 +19,7 @@ type attemptService struct {
 	quizSvc quizservice.QuizService
 }
 
-// NewAttemptService creates a new AttemptService.
+
 func NewAttemptService(repo repository.AttemptRepository, quizSvc quizservice.QuizService) AttemptService {
 	return &attemptService{
 		repo:    repo,
@@ -29,18 +29,18 @@ func NewAttemptService(repo repository.AttemptRepository, quizSvc quizservice.Qu
 
 // SubmitAttempt validates and grades a student's submission.
 func (s *attemptService) SubmitAttempt(ctx context.Context, institutionID uuid.UUID, studentID uuid.UUID, quizID uuid.UUID, req *dto.SubmitAttemptRequest) error {
-	// 1. Fetch Quiz for Evaluation (bypasses standard role masking, returns raw structure)
+	
 	quizRes, err := s.quizSvc.GetQuizForEvaluation(ctx, quizID)
 	if err != nil {
 		return ErrQuizNotAvailable
 	}
 
-	// 2. Validate multi-tenant boundary and publish status
+
 	if quizRes.InstitutionID != institutionID || !quizRes.IsPublished {
 		return ErrQuizNotAvailable
 	}
 
-	// 3. Check for existing attempts
+
 	hasAttempted, err := s.repo.HasAttempted(ctx, studentID, quizID)
 	if err != nil {
 		return fmt.Errorf("attempt service: check attempts: %w", err)
@@ -49,8 +49,6 @@ func (s *attemptService) SubmitAttempt(ctx context.Context, institutionID uuid.U
 		return ErrAlreadyAttempted
 	}
 
-	// 4. Build correct answer mapping for O(1) lookups
-	// correctAnswers maps QuestionID -> OptionID
 	correctAnswers := make(map[uuid.UUID]uuid.UUID)
 	questionMarks := make(map[uuid.UUID]int)
 
@@ -64,18 +62,17 @@ func (s *attemptService) SubmitAttempt(ctx context.Context, institutionID uuid.U
 		}
 	}
 
-	// 5. Evaluate Submission
+	
 	totalScore := 0
 	var domainAnswers []domain.QuizAnswer
 
 	for _, sub := range req.Answers {
-		// Verify this question actually belongs to the quiz
+	
 		marks, exists := questionMarks[sub.QuestionID]
 		if !exists {
 			return ErrInvalidSubmission
 		}
 
-		// Check if correct
 		if sub.SelectedOptionID != nil {
 			if correctAnswers[sub.QuestionID] == *sub.SelectedOptionID {
 				totalScore += marks
@@ -88,19 +85,19 @@ func (s *attemptService) SubmitAttempt(ctx context.Context, institutionID uuid.U
 		})
 	}
 
-	// 6. Build the Domain Attempt
+	
 	now := time.Now()
 	attempt := &domain.QuizAttempt{
 		InstitutionID: institutionID,
 		QuizID:        quizID,
 		StudentID:     studentID,
-		StartedAt:     now, // For bulk submission, started and submitted are effectively the same in Phase 2
+		StartedAt:     now, 
 		SubmittedAt:   &now,
 		Score:         totalScore,
 		TotalMarks:    quizRes.TotalMarks,
 	}
 
-	// 7. Save Transactionally
+	
 	if err := s.repo.CreateAttempt(ctx, attempt, domainAnswers); err != nil {
 		return fmt.Errorf("attempt service: save attempt: %w", err)
 	}
@@ -122,8 +119,7 @@ func (s *attemptService) GetStudentResults(ctx context.Context, studentID uuid.U
 
 // GetQuizResults returns all attempts for a quiz, verifying the caller is the quiz creator.
 func (s *attemptService) GetQuizResults(ctx context.Context, institutionID uuid.UUID, facultyID uuid.UUID, quizID uuid.UUID) ([]dto.FacultyResultResponse, error) {
-	// 1. Verify Ownership (GetQuiz handles ownership verification if callerRole = FACULTY)
-	// We can use the standard GetQuiz method to enforce this.
+
 	_, err := s.quizSvc.GetQuiz(ctx, institutionID, facultyID, domain.RoleFaculty, quizID)
 	if err != nil {
 		return nil, ErrUnauthorized

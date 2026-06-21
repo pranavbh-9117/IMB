@@ -9,7 +9,7 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/quiz/handler"
 )
 
-// Register mounts all quiz routes. The router group must have RequireAuth applied.
+// Quiz Routes
 func Register(rg *gin.RouterGroup, h *handler.QuizHandler) {
 	facultyOnly := middleware.RequireRoles(domain.RoleFaculty)
 	facultyOrStudent := middleware.RequireRoles(domain.RoleFaculty, domain.RoleStudent)

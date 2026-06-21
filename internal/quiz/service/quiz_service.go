@@ -17,7 +17,6 @@ type quizService struct {
 	repo repository.QuizRepository
 }
 
-// NewQuizService creates a new QuizService.
 func NewQuizService(repo repository.QuizRepository) QuizService {
 	return &quizService{repo: repo}
 }
@@ -41,7 +40,7 @@ func (s *quizService) CreateQuiz(ctx context.Context, institutionID uuid.UUID, f
 	return s.mapQuizToResponse(quiz, nil, nil), nil
 }
 
-// GetQuiz retrieves a quiz. Enforces tenant boundaries.
+// GetQuiz retrieves a quiz.
 func (s *quizService) GetQuiz(ctx context.Context, institutionID uuid.UUID, callerID uuid.UUID, callerRole domain.Role, quizID uuid.UUID) (*dto.QuizResponse, error) {
 	quiz, questions, options, err := s.repo.GetQuizWithQuestions(ctx, quizID)
 	if err != nil {
@@ -51,12 +50,10 @@ func (s *quizService) GetQuiz(ctx context.Context, institutionID uuid.UUID, call
 		return nil, fmt.Errorf("quiz service: get: %w", err)
 	}
 
-	// Enforce Multi-Tenant rule
 	if quiz.InstitutionID != institutionID {
-		return nil, ErrQuizNotFound // Lie to prevent leakage
+		return nil, ErrQuizNotFound
 	}
 
-	// Enforce Ownership & Publishing Rules
 	if callerRole == domain.RoleFaculty {
 		if quiz.CreatedBy != callerID {
 			return nil, ErrQuizNotFound
@@ -66,7 +63,7 @@ func (s *quizService) GetQuiz(ctx context.Context, institutionID uuid.UUID, call
 			return nil, ErrQuizNotFound
 		}
 	} else {
-		return nil, ErrQuizNotFound // Institute/Super Admins cannot view quizzes
+		return nil, ErrQuizNotFound
 	}
 
 	return s.mapQuizToResponse(quiz, questions, options), nil
@@ -130,7 +127,7 @@ func (s *quizService) DeleteQuiz(ctx context.Context, facultyID uuid.UUID, quizI
 	return nil
 }
 
-// PublishQuiz flips the IsPublished flag, making it visible to students and locking edits.
+// PublishQuiz
 func (s *quizService) PublishQuiz(ctx context.Context, facultyID uuid.UUID, quizID uuid.UUID) error {
 	quiz, err := s.repo.GetQuizByID(ctx, quizID)
 	if err != nil {
@@ -196,7 +193,6 @@ func (s *quizService) CreateQuestion(ctx context.Context, facultyID uuid.UUID, q
 		return nil, ErrQuizAlreadyPublished
 	}
 
-	// Validate Options
 	correctCount := 0
 	for _, opt := range req.Options {
 		if opt.IsCorrect {
@@ -211,7 +207,7 @@ func (s *quizService) CreateQuestion(ctx context.Context, facultyID uuid.UUID, q
 		QuizID:     quizID,
 		Text:       req.Text,
 		Marks:      req.Marks,
-		OrderIndex: 0, // Simplified for now
+		OrderIndex: 0,
 	}
 
 	var options []domain.Option
@@ -227,7 +223,6 @@ func (s *quizService) CreateQuestion(ctx context.Context, facultyID uuid.UUID, q
 		return nil, fmt.Errorf("quiz service: create question save: %w", err)
 	}
 
-	// Update TotalMarks
 	newTotal := quiz.TotalMarks + question.Marks
 	if err := s.repo.UpdateQuizTotalMarks(ctx, quizID, newTotal); err != nil {
 		return nil, fmt.Errorf("quiz service: update total marks: %w", err)
@@ -256,7 +251,6 @@ func (s *quizService) CreateQuestion(ctx context.Context, facultyID uuid.UUID, q
 }
 
 // GetQuizForEvaluation retrieves a quiz with all correct answers explicitly visible.
-// This is strictly for internal service-to-service communication (e.g., AttemptService).
 func (s *quizService) GetQuizForEvaluation(ctx context.Context, quizID uuid.UUID) (*dto.QuizResponse, error) {
 	quiz, questions, options, err := s.repo.GetQuizWithQuestions(ctx, quizID)
 	if err != nil {
@@ -311,7 +305,7 @@ func (s *quizService) mapQuizToResponse(quiz *domain.Quiz, questions []domain.Qu
 			}
 		}
 
-		// Overwrite res.Questions with the updated pointers
+	
 		res.Questions = nil
 		for _, q := range questions {
 			res.Questions = append(res.Questions, *qMap[q.ID])

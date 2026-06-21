@@ -13,7 +13,7 @@ type CreateRequest struct {
 }
 
 
-type UpdateRequest struct {
+type UpdateInstitutionInput struct {
 	Name    *string `json:"name" binding:"omitempty,max=255"`
 	Address *string `json:"address"`
 	Phone   *string `json:"phone" binding:"omitempty,max=20"`

@@ -10,7 +10,6 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/apperror"
 )
 
-// Sentinel errors
 var (
 	ErrQuizNotAvailable  = apperror.NotFound("quiz not found or not published")
 	ErrAlreadyAttempted  = apperror.Conflict("you have already attempted this quiz")

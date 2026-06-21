@@ -155,37 +155,13 @@ func (h *InstitutionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateRequest
+	var req dto.UpdateInstitutionInput
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, validator.FormatBindingError(err))
 		return
 	}
 
-	existing, err := h.svc.GetByID(c.Request.Context(), id)
-	if err != nil {
-		h.handleServiceError(c, err)
-		return
-	}
-
-	if req.Name != nil {
-		existing.Name = *req.Name
-	}
-	if req.Address != nil {
-		existing.Address = *req.Address
-	}
-	if req.Phone != nil {
-		existing.Phone = *req.Phone
-	}
-	if req.Email != nil {
-		existing.Email = *req.Email
-	}
-
-	if err := h.svc.Update(c.Request.Context(), id, existing); err != nil {
-		h.handleServiceError(c, err)
-		return
-	}
-
-	updated, err := h.svc.GetByID(c.Request.Context(), id)
+	updated, err := h.svc.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		h.handleServiceError(c, err)
 		return

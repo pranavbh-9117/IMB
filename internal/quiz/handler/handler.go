@@ -15,17 +15,16 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/validator"
 )
 
-// QuizHandler handles HTTP requests for quizzes.
 type QuizHandler struct {
 	svc service.QuizService
 }
 
-// NewQuizHandler creates a new QuizHandler.
+
 func NewQuizHandler(svc service.QuizService) *QuizHandler {
 	return &QuizHandler{svc: svc}
 }
 
-// handleServiceError is a helper to translate service errors into HTTP responses.
+
 func (h *QuizHandler) handleServiceError(c *gin.Context, err error) {
 	var appErr *apperror.AppError
 	if errors.As(err, &appErr) {
@@ -136,11 +135,11 @@ func (h *QuizHandler) GetQuiz(c *gin.Context) {
 		return
 	}
 
-	// Filter out correct answers if the caller is a student
+
 	if role == "STUDENT" {
 		for i := range res.Questions {
 			for j := range res.Questions[i].Options {
-				res.Questions[i].Options[j].IsCorrect = false // hide the truth
+				res.Questions[i].Options[j].IsCorrect = false 
 			}
 		}
 	}

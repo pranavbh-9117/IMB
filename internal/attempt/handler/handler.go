@@ -15,12 +15,12 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/validator"
 )
 
-// AttemptHandler processes HTTP requests for quiz attempts.
+
 type AttemptHandler struct {
 	svc service.AttemptService
 }
 
-// NewAttemptHandler creates a new AttemptHandler.
+
 func NewAttemptHandler(svc service.AttemptService) *AttemptHandler {
 	return &AttemptHandler{svc: svc}
 }

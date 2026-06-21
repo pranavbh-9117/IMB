@@ -9,7 +9,7 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/middleware"
 )
 
-// Register mounts all attempt routes. The router groups must have RequireAuth applied.
+// Quiz Attempt routes
 func Register(quizGroup *gin.RouterGroup, rootGroup *gin.RouterGroup, h *handler.AttemptHandler) {
 	studentOnly := middleware.RequireRoles(domain.RoleStudent)
 	facultyOnly := middleware.RequireRoles(domain.RoleFaculty)

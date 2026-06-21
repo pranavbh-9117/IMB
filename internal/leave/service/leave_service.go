@@ -17,12 +17,11 @@ type leaveService struct {
 	repo repository.LeaveRepository
 }
 
-// NewLeaveService creates a new LeaveService.
 func NewLeaveService(repo repository.LeaveRepository) LeaveService {
 	return &leaveService{repo: repo}
 }
 
-// InitializeBalance implements the corresponding interface or provides the named functionality.
+// InitializeBalance when user is created
 func (s *leaveService) InitializeBalance(ctx context.Context, userID, institutionID uuid.UUID, role domain.Role) error {
 	totalDays := 0
 	switch role {
@@ -51,7 +50,7 @@ func (s *leaveService) InitializeBalance(ctx context.Context, userID, institutio
 	return nil
 }
 
-// GetBalance implements the corresponding interface or provides the named functionality.
+// Get Leave Balance
 func (s *leaveService) GetBalance(ctx context.Context, userID uuid.UUID) (*domain.LeaveBalance, error) {
 	balance, err := s.repo.GetBalanceByUserID(ctx, userID)
 	if err != nil {
@@ -63,19 +62,17 @@ func (s *leaveService) GetBalance(ctx context.Context, userID uuid.UUID) (*domai
 	return balance, nil
 }
 
-// ApplyLeave implements the corresponding interface or provides the named functionality.
+// ApplyLeave
 func (s *leaveService) ApplyLeave(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID uuid.UUID, req *domain.LeaveRequest) (*domain.LeaveRequest, error) {
-	// 1. Only Students and Faculty can apply
+
 	if requesterRole != domain.RoleStudent && requesterRole != domain.RoleFaculty {
 		return nil, fmt.Errorf("%w: only students and faculty can apply for leave", ErrUnauthorized)
 	}
 
-	// 2. Validate dates
 	if req.EndDate.Before(req.StartDate) {
 		return nil, fmt.Errorf("%w: end date cannot be before start date", ErrInvalidInput)
 	}
 
-	// 3. Overlap check (fetch all active leaves for user)
 	existingLeaves, err := s.repo.ListRequests(ctx, repository.RequestFilter{UserID: &requesterID}, 0, 0)
 	if err != nil {
 		return nil, fmt.Errorf("leave service: list existing requests: %w", err)
@@ -85,13 +82,12 @@ func (s *leaveService) ApplyLeave(ctx context.Context, requesterID uuid.UUID, re
 		if existing.Status == domain.LeaveStatusRejected || existing.Status == domain.LeaveStatusCancelled {
 			continue
 		}
-		// Overlap logic: StartA <= EndB AND EndA >= StartB
+
 		if !req.StartDate.After(existing.EndDate) && !req.EndDate.Before(existing.StartDate) {
 			return nil, ErrOverlap
 		}
 	}
 
-	// 4. Balance check
 	requestedDays := calculateRequestedDays(req.StartDate, req.EndDate)
 	balance, err := s.repo.GetBalanceByUserID(ctx, requesterID)
 	if err != nil {
@@ -105,7 +101,6 @@ func (s *leaveService) ApplyLeave(ctx context.Context, requesterID uuid.UUID, re
 		return nil, ErrInsufficientBalance
 	}
 
-	// 5. Populate secure fields
 	req.UserID = requesterID
 	req.InstitutionID = requesterInstID
 	req.Status = domain.LeaveStatusPending
@@ -119,7 +114,7 @@ func (s *leaveService) ApplyLeave(ctx context.Context, requesterID uuid.UUID, re
 	return req, nil
 }
 
-// ProcessLeaveApproval implements the corresponding interface or provides the named functionality.
+// Update Leave status
 func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, reviewerID uuid.UUID, reviewerRole domain.Role, reviewerInstID uuid.UUID, newStatus domain.LeaveStatus, note string) error {
 	if newStatus != domain.LeaveStatusApproved && newStatus != domain.LeaveStatusRejected {
 		return fmt.Errorf("%w: invalid target status", ErrInvalidInput)
@@ -135,14 +130,13 @@ func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, revi
 		}
 
 		if req.InstitutionID != reviewerInstID {
-			return ErrRequestNotFound // Tenant isolation (mask existence)
+			return ErrRequestNotFound
 		}
 
 		if req.Status != domain.LeaveStatusPending {
 			return ErrLeaveNotPending
 		}
 
-		// Hierarchical RBAC Check based on explicit business rules
 		if req.User.Role == domain.RoleStudent {
 			if reviewerRole != domain.RoleFaculty {
 				return fmt.Errorf("%w: student leaves can only be approved by faculty", ErrUnauthorized)
@@ -180,7 +174,7 @@ func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, revi
 	})
 }
 
-// GetLeaveDetails implements the corresponding interface or provides the named functionality.
+// Return leave details
 func (s *leaveService) GetLeaveDetails(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID uuid.UUID, requestID uuid.UUID) (*domain.LeaveRequest, error) {
 	req, err := s.repo.GetRequestByID(ctx, requestID)
 	if err != nil {
@@ -191,24 +185,23 @@ func (s *leaveService) GetLeaveDetails(ctx context.Context, requesterID uuid.UUI
 	}
 
 	if req.InstitutionID != requesterInstID {
-		return nil, ErrRequestNotFound // Tenant isolation
+		return nil, ErrRequestNotFound
 	}
 
 	if requesterRole == domain.RoleStudent && req.UserID != requesterID {
-		return nil, ErrRequestNotFound // Students can only see their own
+		return nil, ErrRequestNotFound
 	}
 
 	return req, nil
 }
 
-// ListLeaves implements the corresponding interface or provides the named functionality.
+// ListLeaves based on filters
 func (s *leaveService) ListLeaves(ctx context.Context, requesterID uuid.UUID, requesterRole domain.Role, requesterInstID uuid.UUID, filter repository.RequestFilter, offset, limit int) ([]domain.LeaveRequest, error) {
-	// Tenant isolation is absolute
+
 	filter.InstitutionID = &requesterInstID
 
-	// Role-based visibility
 	if requesterRole == domain.RoleStudent {
-		filter.UserID = &requesterID // Students can only see their own leaves
+		filter.UserID = &requesterID
 	}
 
 	requests, err := s.repo.ListRequests(ctx, filter, offset, limit)
@@ -218,7 +211,7 @@ func (s *leaveService) ListLeaves(ctx context.Context, requesterID uuid.UUID, re
 	return requests, nil
 }
 
-// CancelLeave implements the corresponding interface or provides the named functionality.
+// Cancel Created  Leaves
 func (s *leaveService) CancelLeave(ctx context.Context, requesterID uuid.UUID, requestID uuid.UUID) error {
 	req, err := s.repo.GetRequestByID(ctx, requestID)
 	if err != nil {
@@ -244,7 +237,7 @@ func (s *leaveService) CancelLeave(ctx context.Context, requesterID uuid.UUID, r
 
 // calculateRequestedDays calculates the inclusive number of calendar days between start and end.
 func calculateRequestedDays(start, end time.Time) int {
-	// Normalize to start of day to avoid time-of-day offsets
+
 	s := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC)
 	e := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, time.UTC)
 
@@ -254,5 +247,5 @@ func calculateRequestedDays(start, end time.Time) int {
 
 	duration := e.Sub(s)
 	days := int(duration.Hours() / 24)
-	return days + 1 // Inclusive of the start day
+	return days + 1
 }

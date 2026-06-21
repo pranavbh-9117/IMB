@@ -16,8 +16,7 @@ type institutionRepository struct {
 	db *gorm.DB
 }
 
-// NewInstitutionRepository creates a new instance of InstitutionRepository
-// backed by GORM. It returns the interface type to enforce the abstraction boundary.
+
 func NewInstitutionRepository(db *gorm.DB) InstitutionRepository {
 	return &institutionRepository{db: db}
 }
@@ -30,11 +29,10 @@ func (r *institutionRepository) Create(ctx context.Context, inst *domain.Institu
 	return nil
 }
 
-// GetByID retrieves a single institution by its primary UUID.
-// It explicitly filters by is_active=true to enforce soft-delete boundaries.
+// GetByID retrieves an active institution by ID.
 func (r *institutionRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Institution, error) {
 	var inst domain.Institution
-	err := r.db.WithContext(ctx).First(&inst, "id = ?", id).Error
+	err := r.db.WithContext(ctx).Where("id = ? AND is_active = ?", id, true).First(&inst).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("institution repository: get by id: %w", ErrNotFound)
@@ -44,10 +42,11 @@ func (r *institutionRepository) GetByID(ctx context.Context, id uuid.UUID) (*dom
 	return &inst, nil
 }
 
-// FindByCode looks up an active institution by its unique identifying code.
+// FindByCode looks up an active institution by its unique identifying code,
+// allowing deleted codes to be recycled by new institutions.
 func (r *institutionRepository) FindByCode(ctx context.Context, code string) (*domain.Institution, error) {
 	var inst domain.Institution
-	err := r.db.WithContext(ctx).First(&inst, "code = ?", code).Error
+	err := r.db.WithContext(ctx).Where("code = ? AND is_active = ?", code, true).First(&inst).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("institution repository: find by code: %w", ErrNotFound)
@@ -60,7 +59,7 @@ func (r *institutionRepository) FindByCode(ctx context.Context, code string) (*d
 // List returns a paginated slice of active institutions.
 func (r *institutionRepository) List(ctx context.Context, offset, limit int) ([]domain.Institution, error) {
 	var institutions []domain.Institution
-	query := r.db.WithContext(ctx)
+	query := r.db.WithContext(ctx).Where("is_active = ?", true)
 
 	if limit > 0 {
 		query = query.Limit(limit)

@@ -16,7 +16,7 @@ type attemptRepository struct {
 	db *gorm.DB
 }
 
-// NewAttemptRepository creates a new instance of AttemptRepository.
+
 func NewAttemptRepository(db *gorm.DB) AttemptRepository {
 	return &attemptRepository{db: db}
 }

@@ -16,7 +16,6 @@ type userRepository struct {
 	db *gorm.DB
 }
 
-// NewUserRepository creates a new UserRepository backed by GORM.
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
@@ -44,23 +43,7 @@ func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Use
 	return &user, nil
 }
 
-// GetByEmail retrieves a single active user by exact email match.
-func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	var user domain.User
-	err := r.db.WithContext(ctx).
-		Where("email = ? AND is_active = ?", email, true).
-		First(&user).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("user repository: get by email: %w", ErrNotFound)
-		}
-		return nil, fmt.Errorf("user repository: get by email: %w", err)
-	}
-	return &user, nil
-}
-
-// List returns a paginated slice of active users. If institutionID is provided,
-// the result is scoped to that specific tenant.
+//Return list of active users
 func (r *userRepository) List(ctx context.Context, institutionID *uuid.UUID, offset, limit int) ([]domain.User, error) {
 	var users []domain.User
 	query := r.db.WithContext(ctx).Where("is_active = ?", true)
@@ -102,7 +85,7 @@ func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 // EmailExists checks if the given email is currently bound to any user
-// (active or inactive) to enforce global uniqueness.
+
 func (r *userRepository) EmailExists(ctx context.Context, email string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).

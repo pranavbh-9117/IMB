@@ -11,7 +11,7 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/domain"
 )
 
-// ErrNotFound is returned when an attempt is not found.
+
 var ErrNotFound = errors.New("record not found")
 
 // AttemptRepository defines the interface for attempt data access.

@@ -17,12 +17,12 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/validator"
 )
 
-// LeaveHandler processes HTTP requests for leave management.
+
 type LeaveHandler struct {
 	svc service.LeaveService
 }
 
-// NewLeaveHandler creates a new LeaveHandler.
+
 func NewLeaveHandler(svc service.LeaveService) *LeaveHandler {
 	return &LeaveHandler{svc: svc}
 }
@@ -192,12 +192,12 @@ func (h *LeaveHandler) ListLeaves(c *gin.Context) {
 
 	var filter repository.RequestFilter
 
-	// Allow approvers to query their subordinates' leaves by passing view=approvals
+	
 	view := c.Query("view")
 	if view == "approvals" {
-		// Service layer ensures Faculty see Student leaves, Institute Admins see Faculty leaves
+		
 	} else {
-		// Default to viewing own leaves
+		
 		filter.UserID = &userID
 	}
 
@@ -255,7 +255,7 @@ func (h *LeaveHandler) CancelLeave(c *gin.Context) {
 	response.OK(c, "leave request cancelled successfully", nil)
 }
 
-// --- Private Helpers ---
+
 
 func (h *LeaveHandler) mapToResponse(req *domain.LeaveRequest) dto.LeaveResponse {
 	res := dto.LeaveResponse{
