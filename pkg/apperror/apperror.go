@@ -3,51 +3,46 @@ package apperror
 
 import "net/http"
 
-// AppError is a structured error carrying an HTTP status code and a
-// human-readable message. It is used by pkg/response to produce consistent
-// error envelopes and can be returned from any layer that needs to signal
-// a specific HTTP status to the handler.
+// AppError returns the status code and message
 type AppError struct {
 	Code    int
 	Message string
 }
 
-// Error implements the corresponding interface or provides the named functionality.
+// Return error message
 func (e *AppError) Error() string { return e.Message }
 
-// New creates an AppError with the given HTTP status code and message.
+// Creates error with status code and message
 func New(code int, message string) *AppError {
 	return &AppError{Code: code, Message: message}
 }
 
-// Common constructors for frequently used HTTP error statuses.
-
-// BadRequest implements the corresponding interface or provides the named functionality.
+// BadRequest Error
 func BadRequest(message string) *AppError {
 	return New(http.StatusBadRequest, message)
 }
 
-// Unauthorized implements the corresponding interface or provides the named functionality.
+// Unauthorized Error
 func Unauthorized(message string) *AppError {
 	return New(http.StatusUnauthorized, message)
 }
 
-// Forbidden implements the corresponding interface or provides the named functionality.
+// Forbidden Error
 func Forbidden(message string) *AppError {
 	return New(http.StatusForbidden, message)
 }
 
-// NotFound implements the corresponding interface or provides the named functionality.
+// NotFound Error
 func NotFound(message string) *AppError {
 	return New(http.StatusNotFound, message)
 }
 
-// Conflict implements the corresponding interface or provides the named functionality.
+// Conflict Error
 func Conflict(message string) *AppError {
 	return New(http.StatusConflict, message)
 }
 
-// Internal implements the corresponding interface or provides the named functionality.
+// Internal Server Error
 func Internal() *AppError {
 	return New(http.StatusInternalServerError, "internal server error")
 }

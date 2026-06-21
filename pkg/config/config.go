@@ -10,7 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config holds all application configuration loaded from environment variables.
+// App configurations from .env
 type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
@@ -18,13 +18,13 @@ type Config struct {
 	Seed     SeedConfig
 }
 
-// AppConfig holds HTTP server configuration.
+// Server configuration.
 type AppConfig struct {
 	Port string
 	Env  string
 }
 
-// DatabaseConfig holds PostgreSQL connection parameters.
+// Database configuration
 type DatabaseConfig struct {
 	Host     string
 	Port     string
@@ -34,23 +34,20 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
-// JWTConfig holds token signing and expiry configuration.
+// JWT Configuration
 type JWTConfig struct {
 	Secret        string
 	AccessExpiry  time.Duration
 	RefreshExpiry time.Duration
 }
 
-// SeedConfig holds credentials used to bootstrap the Super Admin account.
+// HardSeed Configuration
 type SeedConfig struct {
 	SuperAdminEmail    string
 	SuperAdminPassword string
 }
 
-// Load reads the .env file if present, then populates a Config from environment
-// variables. If .env is absent (e.g. in a containerised environment), OS-level
-// variables are used directly without error. All variables are required; an
-// error is returned if any are missing or malformed.
+// Loads configuration  from .env
 func Load() (*Config, error) {
 
 	_ = godotenv.Load()
@@ -96,8 +93,7 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// validate checks that all required string fields are non-empty. Duration fields
-// are validated upstream in parseDuration before the struct is populated.
+// Checks all the .env variables are loaded
 func (c *Config) validate() error {
 	required := []struct {
 		key string
@@ -130,9 +126,7 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// parseDuration reads a Go duration string from the named environment variable
-// and parses it. Returns an error if the variable is absent or the value is not
-// a valid Go duration string (e.g. "15m", "168h").
+// Parse JWT Duration defined in .env
 func parseDuration(key string) (time.Duration, error) {
 	val := os.Getenv(key)
 	if strings.TrimSpace(val) == "" {

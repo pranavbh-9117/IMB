@@ -10,21 +10,17 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/domain"
 )
 
-// Unexported context keys to prevent collisions and enforce the use of
-// typed extraction functions.
+
 const (
 	userIDKey        = "auth.user_id"
 	roleKey          = "auth.role"
 	institutionIDKey = "auth.institution_id"
 )
 
-// ErrContextValueMissing is returned when a required authentication value
-// is not present in the Gin context. This typically indicates that a protected
-// handler was mounted without the RequireAuth middleware.
+//  Custom error indicates that a protected handler was mounted without the RequireAuth middleware.
 var ErrContextValueMissing = errors.New("authentication value missing from context")
 
-// GetUserID retrieves the authenticated user's UUID from the Gin context.
-// It returns an error if the value is missing or is not a valid UUID.
+// Retrieve UserID form gin Context
 func GetUserID(c *gin.Context) (uuid.UUID, error) {
 	val, exists := c.Get(userIDKey)
 	if !exists {
@@ -39,8 +35,7 @@ func GetUserID(c *gin.Context) (uuid.UUID, error) {
 	return id, nil
 }
 
-// GetRole retrieves the authenticated user's Role from the Gin context.
-// It returns an error if the value is missing.
+// Retrieve UserRole from gin Context
 func GetRole(c *gin.Context) (domain.Role, error) {
 	val, exists := c.Get(roleKey)
 	if !exists {
@@ -55,16 +50,13 @@ func GetRole(c *gin.Context) (domain.Role, error) {
 	return role, nil
 }
 
-// GetInstitutionID retrieves the authenticated user's Institution UUID from
-// the Gin context. It returns a nil pointer if the user has no institution
-// (e.g., Super Admin), or an error if the value is missing or invalid.
+// Retrieve InstitutionID from gin Context
 func GetInstitutionID(c *gin.Context) (*uuid.UUID, error) {
 	val, exists := c.Get(institutionIDKey)
 	if !exists {
 		return nil, ErrContextValueMissing
 	}
-
-	// Since auth.go sets a *uuid.UUID, we must assert it as a pointer.
+	
 	instID, ok := val.(*uuid.UUID)
 	if !ok {
 		return nil, errors.New("institution ID in context is not a valid *uuid.UUID")

@@ -12,12 +12,7 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/response"
 )
 
-// RequireAuth creates a Gin middleware that validates the JWT access token
-// provided in the Authorization header. If the token is valid, it extracts the
-// UserID, Role, and InstitutionID claims, parses them into appropriate Go
-// types, and stores them in the request context for downstream handlers.
-// If the token is missing, malformed, or invalid, the request is aborted with
-// a 401 Unauthorized response.
+// Validate JWT and extracts the payload
 func RequireAuth(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -42,7 +37,6 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		// Parse claims into proper types before storing in context
 		userID, err := uuid.Parse(claims.UserID)
 		if err != nil {
 			response.Unauthorized(c, "malformed user ID in token")
@@ -61,12 +55,11 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 			instID = &parsedID
 		}
 
-		// Store typed values in the context using unexported keys
 		c.Set(userIDKey, userID)
 		c.Set(roleKey, domain.Role(claims.Role))
 		c.Set(institutionIDKey, instID)
 
-		// Proceed to the next handler
+	
 		c.Next()
 	}
 }

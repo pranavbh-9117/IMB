@@ -15,12 +15,10 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/validator"
 )
 
-// InstitutionHandler processes HTTP requests for institution management.
 type InstitutionHandler struct {
 	svc service.InstitutionService
 }
 
-// NewInstitutionHandler creates a new InstitutionHandler.
 func NewInstitutionHandler(svc service.InstitutionService) *InstitutionHandler {
 	return &InstitutionHandler{svc: svc}
 }
@@ -106,7 +104,6 @@ func (h *InstitutionHandler) GetByID(c *gin.Context) {
 // @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
 // @Router /institutions [get]
 func (h *InstitutionHandler) List(c *gin.Context) {
-	// Parse offset, default to 0
 	offsetStr := c.DefaultQuery("offset", "0")
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil || offset < 0 {
@@ -114,7 +111,6 @@ func (h *InstitutionHandler) List(c *gin.Context) {
 		return
 	}
 
-	// Parse limit, default to 10
 	limitStr := c.DefaultQuery("limit", "10")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil || limit < 0 {
@@ -128,7 +124,6 @@ func (h *InstitutionHandler) List(c *gin.Context) {
 		return
 	}
 
-	// Map domain slice to DTO slice
 	res := make([]dto.InstitutionResponse, 0, len(institutions))
 	for _, inst := range institutions {
 		res = append(res, h.mapToResponse(&inst))
@@ -166,7 +161,6 @@ func (h *InstitutionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Fetch existing to apply partial updates
 	existing, err := h.svc.GetByID(c.Request.Context(), id)
 	if err != nil {
 		h.handleServiceError(c, err)
@@ -191,7 +185,6 @@ func (h *InstitutionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Fetch the saved object to guarantee consistency in the response
 	updated, err := h.svc.GetByID(c.Request.Context(), id)
 	if err != nil {
 		h.handleServiceError(c, err)
@@ -230,7 +223,6 @@ func (h *InstitutionHandler) Delete(c *gin.Context) {
 	response.OK(c, "institution deleted successfully", nil)
 }
 
-// --- private helpers ---
 
 func (h *InstitutionHandler) mapToResponse(inst *domain.Institution) dto.InstitutionResponse {
 	return dto.InstitutionResponse{

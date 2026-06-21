@@ -1,9 +1,7 @@
 // Package domain provides domain functionality for the IMB platform.
 package domain
 
-// Institution represents an educational institution registered on the
-// platform. It is the top-level tenant boundary; all users, leave records,
-// and quizzes belong to exactly one institution.
+// Institute Model
 type Institution struct {
 	Base
 

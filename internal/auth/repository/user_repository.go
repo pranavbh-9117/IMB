@@ -12,12 +12,11 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/domain"
 )
 
-// userRepository is the GORM-backed implementation of UserRepository.
+// userRepository implements UserRepository interface
 type userRepository struct {
 	db *gorm.DB
 }
 
-// NewUserRepository returns a UserRepository backed by the provided *gorm.DB.
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }

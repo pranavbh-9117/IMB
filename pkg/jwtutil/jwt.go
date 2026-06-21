@@ -9,11 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims defines the custom payload embedded in every access token.
-// UserID, Role, and InstitutionID are application-specific fields.
-// InstitutionID is an empty string for super_admin accounts that have no
-// institution affiliation.
-// RegisteredClaims provides the standard JWT fields: ExpiresAt, IssuedAt.
+// Payload embedded in every token
 type Claims struct {
 	UserID        string `json:"user_id"`
 	Role          string `json:"role"`
@@ -21,10 +17,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateAccessToken creates a signed HS256 JWT access token for the given
-// user. expiry controls the token lifetime relative to the current time.
-// secret is the HMAC signing key and must match the value used in
-// ValidateAccessToken.
+// Generate JWT
 func GenerateAccessToken(userID, role, institutionID string, expiry time.Duration, secret string) (string, error) {
 	now := time.Now()
 
@@ -48,10 +41,7 @@ func GenerateAccessToken(userID, role, institutionID string, expiry time.Duratio
 	return signed, nil
 }
 
-// ValidateAccessToken parses and validates the provided JWT string.
-// It enforces that the token was signed with HS256 and that the signature
-// matches secret. Returns the embedded Claims on success, or a wrapped
-// error on any failure (expired, malformed, wrong algorithm, bad signature).
+// Validate JWT
 func ValidateAccessToken(tokenString, secret string) (*Claims, error) {
 	claims := &Claims{}
 

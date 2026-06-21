@@ -18,6 +18,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/pranavbh-9117/IMB/docs"
+	attempthandler "github.com/pranavbh-9117/IMB/internal/attempt/handler"
+	attemptrepo "github.com/pranavbh-9117/IMB/internal/attempt/repository"
+	attemptroutes "github.com/pranavbh-9117/IMB/internal/attempt/routes"
+	attemptservice "github.com/pranavbh-9117/IMB/internal/attempt/service"
 	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
 	authrepo "github.com/pranavbh-9117/IMB/internal/auth/repository"
 	authroutes "github.com/pranavbh-9117/IMB/internal/auth/routes"
@@ -33,6 +37,10 @@ import (
 	leaveservice "github.com/pranavbh-9117/IMB/internal/leave/service"
 	"github.com/pranavbh-9117/IMB/internal/middleware"
 	"github.com/pranavbh-9117/IMB/internal/migration"
+	quizhandler "github.com/pranavbh-9117/IMB/internal/quiz/handler"
+	quizrepo "github.com/pranavbh-9117/IMB/internal/quiz/repository"
+	quizroutes "github.com/pranavbh-9117/IMB/internal/quiz/routes"
+	quizservice "github.com/pranavbh-9117/IMB/internal/quiz/service"
 	"github.com/pranavbh-9117/IMB/internal/seed"
 	userhandler "github.com/pranavbh-9117/IMB/internal/user/handler"
 	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
@@ -44,17 +52,19 @@ import (
 )
 
 func main() {
-	// 1. Load configuration
+	//Loading configurations
 	cfg, err := config.Load()
 	if err != nil {
 		os.Exit(1)
 	}
 
-	// 2. Initialize global logger
+	//Initializing logger
 	logger.Init(cfg.App.Env)
+
+	//Create context
 	ctx := context.Background()
 
-	// 3. Initialize database
+	//Initializing DB
 	db, err := database.New(cfg.Database)
 	if err != nil {
 		logger.Error(ctx, "Failed to initialize database", "error", err)
@@ -67,79 +77,97 @@ func main() {
 	}
 	logger.Info(ctx, "Database connected successfully")
 
-	// 4. Run auto-migrations
+	//DB Migrations
 	if err := migration.Run(db); err != nil {
 		logger.Error(ctx, "Migration failed", "error", err)
 		os.Exit(1)
 	}
 	logger.Info(ctx, "Database migration completed")
 
-	// 5. Seed Super Admin
+	//HardSeeding Super Admin
 	if err := seed.Run(db, cfg.Seed); err != nil {
 		logger.Error(ctx, "Seed failed", "error", err)
 		os.Exit(1)
 	}
 	logger.Info(ctx, "Database seed completed")
 
-	// 5. Instantiate Auth Module
+	//Auth Module
 	userRepo := authrepo.NewUserRepository(db)
 	tokenRepo := authrepo.NewRefreshTokenRepository(db)
 	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT)
 	authHandler := authhandler.NewAuthHandler(authSvc, cfg.JWT)
 
-	// 6. Instantiate Institution Module
+	//Institution Module
 	institutionRepo := instrepo.NewInstitutionRepository(db)
 	institutionSvc := instservice.NewInstitutionService(institutionRepo)
 	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
 
-	// 7. Instantiate Leave Module
+	//Leave Module
 	leaveRepo := leaverepo.NewLeaveRepository(db)
 	leaveSvc := leaveservice.NewLeaveService(leaveRepo)
 	leaveHandler := leavehandler.NewLeaveHandler(leaveSvc)
 
-	// 8. Instantiate User Module (Injected with LeaveInitializer)
+	//User Module
 	userManagementRepo := userrepo.NewUserRepository(db)
 	userSvc := userservice.NewUserService(userManagementRepo, leaveSvc)
 	userHandler := userhandler.NewUserHandler(userSvc)
 
-	// Initialize Gin Router
+	//Quiz Module
+	quizRepo := quizrepo.NewQuizRepository(db)
+	quizSvc := quizservice.NewQuizService(quizRepo)
+	quizHandler := quizhandler.NewQuizHandler(quizSvc)
+
+	//Quiz Attempt Module
+	attemptRepo := attemptrepo.NewAttemptRepository(db)
+	attemptSvc := attemptservice.NewAttemptService(attemptRepo, quizSvc)
+	attemptHandler := attempthandler.NewAttemptHandler(attemptSvc)
+
+	//Gin Router
 	r := gin.Default()
 
-	// Mount Request Logger
+	//Request Logger
 	r.Use(middleware.RequestLogger())
 
-	// 8. API v1 Group
+	//API v1 Group
 	v1 := r.Group("/api/v1")
 
-	// 9. Register Swagger UI (Public)
+	//Swagger UI
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// 10. Instantiate Middlewares
+	//Middlewares
 	authMiddleware := middleware.RequireAuth(cfg.JWT.Secret)
 	superAdminMiddleware := middleware.RequireRoles(domain.RoleSuperAdmin)
 
-	// 10. Register Auth Routes
+	//Auth Routes
 	authGroup := v1.Group("/auth")
 	authroutes.Register(authGroup, authHandler, authMiddleware)
 
-	// 11. Register Institution Routes (Protected by Auth & Super Admin)
+	//Institution Routes
 	instGroup := v1.Group("/institutions")
 	instGroup.Use(authMiddleware, superAdminMiddleware)
 	instroutes.Register(instGroup, institutionHandler)
 
-	// 12. Register User Routes (Protected by Auth & Super/Institute Admin)
+	//User Routes
 	userGroup := v1.Group("/users")
 	userGroup.Use(authMiddleware, middleware.RequireRoles(domain.RoleSuperAdmin, domain.RoleInstituteAdmin))
 	userroutes.Register(userGroup, userHandler)
 
-	// 13. Register Leave Routes (Protected by Auth)
+	//Register Leave Routes
 	leaveGroup := v1.Group("/leaves")
 	leaveGroup.Use(authMiddleware)
 	leaveroutes.Register(leaveGroup, leaveHandler)
 
+	//Quiz Routes
+	quizGroup := v1.Group("/quizzes")
+	quizGroup.Use(authMiddleware)
+	quizroutes.Register(quizGroup, quizHandler)
 
+	//Quiz Attempt Routes
+	attemptRootGroup := v1.Group("")
+	attemptRootGroup.Use(authMiddleware)
+	attemptroutes.Register(quizGroup, attemptRootGroup, attemptHandler)
 
-	// 13. Start Server
+	//Server Setup
 	port := cfg.App.Port
 	if port == "" {
 		port = "8080"

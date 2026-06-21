@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// envelope is the standard JSON response shape used by every endpoint.
+// Standard Response JSON Format
 type envelope struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`

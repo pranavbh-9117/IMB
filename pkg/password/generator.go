@@ -6,11 +6,10 @@ import (
 	"math/big"
 )
 
-// charset defines the characters allowed in the generated temporary password.
+
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
 
-// GenerateTemp generates a cryptographically secure random string of the
-// specified length. It uses crypto/rand to prevent predictability.
+// Generate Temporary password when user is created
 func GenerateTemp(length int) (string, error) {
 	if length <= 0 {
 		return "", nil

@@ -2,6 +2,8 @@
 
 API_URL="http://localhost:8080/api/v1"
 OUTPUT_FILE="api_test_results.txt"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STATUS_FILE="$SCRIPT_DIR/.last_http_status"
 
 > "$OUTPUT_FILE"
 
@@ -57,6 +59,7 @@ log_request() {
   log "RESPONSE: $resp_body"
   log ""
 
+  echo "$http_status" > "$STATUS_FILE"
   echo "$resp_body"
 }
 
@@ -70,10 +73,53 @@ validate_value() {
   fi
 }
 
+assert_status() {
+  local expected="$1"
+  local label="$2"
+  local actual_status=$(cat "$STATUS_FILE")
+  if [ "$actual_status" != "$expected" ]; then
+    log "ASSERT FAIL: $label - Expected status $expected, got $actual_status"
+    exit 1
+  fi
+  log "PASS: $label"
+}
+
+assert_not_null() {
+  local value="$1"
+  local label="$2"
+  if [ "$value" = "null" ] || [ -z "$value" ]; then
+    log "ASSERT FAIL: $label - Value is null or empty"
+    exit 1
+  fi
+  log "PASS: $label"
+}
+
+assert_contains() {
+  local haystack="$1"
+  local needle="$2"
+  local label="$3"
+  if [[ "$haystack" != *"$needle"* ]]; then
+    log "ASSERT FAIL: $label - Expected to contain '$needle'"
+    exit 1
+  fi
+  log "PASS: $label"
+}
+
+assert_not_contains() {
+  local haystack="$1"
+  local needle="$2"
+  local label="$3"
+  if [[ "$haystack" == *"$needle"* ]]; then
+    log "ASSERT FAIL: $label - Expected NOT to contain '$needle'"
+    exit 1
+  fi
+  log "PASS: $label"
+}
+
 echo ""
 log "=================== LOGIN ==================="
 
-SA_LOGIN_RES=$(log_request "POST" "/auth/login" '{"email":"aqumanj@gmail.com","password":"dboss000"}' "" "Super Admin Login")
+SA_LOGIN_RES=$(log_request "POST" "/auth/login" '{"email":"aqumanj@gmail.com","password":"jalgaara"}' "" "Super Admin Login")
 
 SA_TOKEN=$(echo "$SA_LOGIN_RES" | jq -r '.data.access_token')
 
@@ -180,16 +226,170 @@ INST2_ID=$(echo "$INST2_RES" | jq -r '.data.id')
 validate_value "$INST2_ID" "Beta Institution creation failed"
 
 IA2_RES=$(log_request "POST" "/users" "{\"name\":\"Beta Admin\",\"email\":\"$BETA_ADMIN_EMAIL\",\"role\":\"institute_admin\",\"institution_id\":\"$INST2_ID\"}" "$SA_TOKEN" "Create Beta Admin")
-
 IA2_ID=$(echo "$IA2_RES" | jq -r '.data.user.id')
-
+IA2_PASS=$(echo "$IA2_RES" | jq -r '.data.temporary_password')
 validate_value "$IA2_ID" "Beta Admin creation failed"
 
+IA2_LOGIN_RES=$(log_request "POST" "/auth/login" "{\"email\":\"$BETA_ADMIN_EMAIL\",\"password\":\"$IA2_PASS\"}" "" "Beta Admin Login")
+IA2_TOKEN=$(echo "$IA2_LOGIN_RES" | jq -r '.data.access_token')
+
+BETA_FAC_EMAIL="beta_fac_${TS}@beta.com"
+BETA_FAC_RES=$(log_request "POST" "/users" "{\"name\":\"Beta Faculty\",\"email\":\"$BETA_FAC_EMAIL\",\"role\":\"faculty\"}" "$IA2_TOKEN" "Create Beta Faculty")
+BETA_FAC_PASS=$(echo "$BETA_FAC_RES" | jq -r '.data.temporary_password')
+BETA_FAC_LOGIN=$(log_request "POST" "/auth/login" "{\"email\":\"$BETA_FAC_EMAIL\",\"password\":\"$BETA_FAC_PASS\"}" "" "Beta Faculty Login")
+BETA_FAC_TOKEN=$(echo "$BETA_FAC_LOGIN" | jq -r '.data.access_token')
+
+BETA_STUDENT_EMAIL="beta_student_${TS}@beta.com"
+BETA_STUDENT_RES=$(log_request "POST" "/users" "{\"name\":\"Beta Student\",\"email\":\"$BETA_STUDENT_EMAIL\",\"role\":\"student\"}" "$IA2_TOKEN" "Create Beta Student")
+BETA_STUDENT_PASS=$(echo "$BETA_STUDENT_RES" | jq -r '.data.temporary_password')
+BETA_STUDENT_LOGIN=$(log_request "POST" "/auth/login" "{\"email\":\"$BETA_STUDENT_EMAIL\",\"password\":\"$BETA_STUDENT_PASS\"}" "" "Beta Student Login")
+BETA_STUDENT_TOKEN=$(echo "$BETA_STUDENT_LOGIN" | jq -r '.data.access_token')
+
 log_request "GET" "/users/$IA2_ID" "" "$IA_TOKEN" "Fail: Cross Tenant GET"
-
 log_request "PUT" "/users/$IA2_ID" '{"name":"Hacked Name"}' "$IA_TOKEN" "Fail: Cross Tenant UPDATE"
-
 log_request "DELETE" "/users/$IA2_ID" "" "$IA_TOKEN" "Fail: Cross Tenant DELETE"
+
+echo ""
+log "=================== QUIZ MANAGEMENT ==================="
+
+# Create Alpha Faculty B for Ownership tests
+ALPHA_FAC_B_EMAIL="faculty_b_${TS}@alpha.com"
+FAC_B_RES=$(log_request "POST" "/users" "{\"name\":\"Alpha Faculty B\",\"email\":\"$ALPHA_FAC_B_EMAIL\",\"role\":\"faculty\"}" "$IA_TOKEN" "Create Alpha Faculty B")
+FAC_B_PASS=$(echo "$FAC_B_RES" | jq -r '.data.temporary_password')
+FAC_B_LOGIN=$(log_request "POST" "/auth/login" "{\"email\":\"$ALPHA_FAC_B_EMAIL\",\"password\":\"$FAC_B_PASS\"}" "" "Alpha Faculty B Login")
+FAC_B_TOKEN=$(echo "$FAC_B_LOGIN" | jq -r '.data.access_token')
+
+# Create Beta Quiz for Isolation tests
+BETA_QUIZ_RES=$(log_request "POST" "/quizzes" '{"title":"Beta Quiz","description":"Only for Beta","duration_minutes":30}' "$BETA_FAC_TOKEN" "Create Beta Quiz")
+assert_status "201" "Beta Quiz Creation"
+BETA_QUIZ_ID=$(echo "$BETA_QUIZ_RES" | jq -r '.data.id')
+
+# Create Alpha Quiz
+ALPHA_QUIZ_RES=$(log_request "POST" "/quizzes" '{"title":"Midterm Exam","description":"Test knowledge","duration_minutes":60}' "$FAC_TOKEN" "Create Alpha Quiz")
+assert_status "201" "Alpha Quiz Creation"
+ALPHA_QUIZ_ID=$(echo "$ALPHA_QUIZ_RES" | jq -r '.data.id')
+assert_not_null "$ALPHA_QUIZ_ID" "Alpha Quiz ID Extraction"
+
+echo ""
+log "=================== QUIZ BUSINESS RULES ==================="
+
+# Question Validation Test
+log_request "POST" "/quizzes/$ALPHA_QUIZ_ID/questions" '{"text":"Q1","marks":5,"options":[{"text":"A","is_correct":false},{"text":"B","is_correct":false}]}' "$FAC_TOKEN" "Fail: 0 Correct Options"
+assert_status "400" "0 Correct Options Validation"
+
+log_request "POST" "/quizzes/$ALPHA_QUIZ_ID/questions" '{"text":"Q1","marks":5,"options":[{"text":"A","is_correct":true},{"text":"B","is_correct":true}]}' "$FAC_TOKEN" "Fail: 2 Correct Options"
+assert_status "400" "2 Correct Options Validation"
+
+# Add a valid question
+QUESTION_RES=$(log_request "POST" "/quizzes/$ALPHA_QUIZ_ID/questions" '{"text":"What is 2+2?","marks":5,"options":[{"text":"3","is_correct":false},{"text":"4","is_correct":true}]}' "$FAC_TOKEN" "Add Valid Question")
+assert_status "201" "Add Valid Question"
+QUESTION_ID=$(echo "$QUESTION_RES" | jq -r '.data.id')
+assert_not_null "$QUESTION_ID" "Question ID Extraction"
+OPTION_ID=$(echo "$QUESTION_RES" | jq -r '.data.options[] | select(.is_correct==true) | .id')
+
+# Draft Visibility Test
+STUDENT_DRAFTS=$(log_request "GET" "/quizzes" "" "$STUDENT_TOKEN" "Student Lists Quizzes (Drafts Hidden)")
+assert_status "200" "List Quizzes (Student)"
+assert_not_contains "$STUDENT_DRAFTS" "Midterm Exam" "Draft Quiz Visibility"
+
+echo ""
+log "=================== QUIZ RBAC & TENANT TESTS ==================="
+
+# RBAC
+log_request "POST" "/quizzes" '{"title":"Student Quiz","description":"x","duration_minutes":10}' "$STUDENT_TOKEN" "Fail: Student Creates Quiz"
+assert_status "403" "Student Create Quiz Blocked"
+log_request "POST" "/quizzes" '{"title":"Admin Quiz","description":"x","duration_minutes":10}' "$IA_TOKEN" "Fail: IA Creates Quiz"
+assert_status "403" "IA Create Quiz Blocked"
+log_request "PUT" "/quizzes/$ALPHA_QUIZ_ID" '{"title":"Hacked","description":"x","duration_minutes":10}' "$STUDENT_TOKEN" "Fail: Student Updates Quiz"
+assert_status "403" "Student Update Quiz Blocked"
+log_request "DELETE" "/quizzes/$ALPHA_QUIZ_ID" "" "$IA_TOKEN" "Fail: IA Deletes Quiz"
+assert_status "403" "IA Delete Quiz Blocked"
+
+# Tenant Isolation
+log_request "GET" "/quizzes/$BETA_QUIZ_ID" "" "$STUDENT_TOKEN" "Fail: Alpha Student GET Beta Quiz"
+ACTUAL_STATUS=$(cat "$STATUS_FILE")
+if [ "$ACTUAL_STATUS" != "404" ] && [ "$ACTUAL_STATUS" != "403" ]; then
+  log "ASSERT FAIL: Alpha Student cross-tenant GET failed. Got $ACTUAL_STATUS"
+  exit 1
+fi
+log "PASS: Cross Tenant GET Blocked"
+
+# Ownership Rules (Same Institution, Cross Faculty)
+log_request "GET" "/quizzes/$ALPHA_QUIZ_ID" "" "$FAC_B_TOKEN" "Fail: Faculty B GET Faculty A Quiz"
+ACTUAL_STATUS=$(cat "$STATUS_FILE")
+if [ "$ACTUAL_STATUS" != "404" ] && [ "$ACTUAL_STATUS" != "403" ]; then
+  log "ASSERT FAIL: Faculty B cross-faculty GET failed. Got $ACTUAL_STATUS"
+  exit 1
+fi
+log "PASS: Cross Faculty GET Blocked"
+
+echo ""
+log "=================== QUIZ PUBLISH & IMMUTABILITY ==================="
+
+# Publish Quiz
+log_request "PUT" "/quizzes/$ALPHA_QUIZ_ID/publish" "" "$FAC_TOKEN" "Faculty Publishes Quiz"
+assert_status "200" "Publish Quiz"
+
+# Publish Visibility Test
+STUDENT_PUBS=$(log_request "GET" "/quizzes" "" "$STUDENT_TOKEN" "Student Lists Published Quizzes")
+assert_contains "$STUDENT_PUBS" "Midterm Exam" "Published Quiz Visibility"
+
+# Published Immutability Test
+log_request "PUT" "/quizzes/$ALPHA_QUIZ_ID" '{"title":"Modified Title","description":"y","duration_minutes":20}' "$FAC_TOKEN" "Fail: Modify Published Quiz"
+assert_status "409" "Published Quiz Immutability"
+
+echo ""
+log "=================== QUIZ ATTEMPTS & SCORING ==================="
+
+# RBAC Attempt
+log_request "POST" "/quizzes/$ALPHA_QUIZ_ID/attempt" '{"answers":[]}' "$FAC_TOKEN" "Fail: Faculty Attempts Quiz"
+assert_status "403" "Faculty Attempt Blocked"
+
+# Cross Tenant Attempt
+log_request "POST" "/quizzes/$BETA_QUIZ_ID/attempt" '{"answers":[]}' "$STUDENT_TOKEN" "Fail: Cross Tenant Attempt"
+ACTUAL_STATUS=$(cat "$STATUS_FILE")
+if [ "$ACTUAL_STATUS" != "404" ] && [ "$ACTUAL_STATUS" != "403" ] && [ "$ACTUAL_STATUS" != "400" ]; then
+  log "ASSERT FAIL: Cross Tenant Attempt blocked check failed. Got $ACTUAL_STATUS"
+  exit 1
+fi
+log "PASS: Cross Tenant Attempt Blocked"
+
+# Valid Student Attempt
+ATTEMPT_RES=$(log_request "POST" "/quizzes/$ALPHA_QUIZ_ID/attempt" "{\"answers\":[{\"question_id\":\"$QUESTION_ID\",\"selected_option_id\":\"$OPTION_ID\"}]}" "$STUDENT_TOKEN" "Student Attempts Quiz")
+assert_status "201" "Valid Attempt"
+
+# One Attempt Rule
+log_request "POST" "/quizzes/$ALPHA_QUIZ_ID/attempt" '{"answers":[]}' "$STUDENT_TOKEN" "Fail: Second Attempt"
+assert_status "409" "One Attempt Rule Enforced"
+
+# Results Visibility (Student)
+STUDENT_RESULTS=$(log_request "GET" "/results" "" "$STUDENT_TOKEN" "Student GET Results")
+assert_status "200" "Student Results Status"
+ST_SCORE=$(echo "$STUDENT_RESULTS" | jq -r '.data[0].score')
+ST_TOTAL=$(echo "$STUDENT_RESULTS" | jq -r '.data[0].total_marks')
+if [ "$ST_SCORE" -le 0 ] || [ "$ST_TOTAL" -le 0 ]; then
+  log "ASSERT FAIL: Score or TotalMarks <= 0"
+  exit 1
+fi
+log "PASS: Score Validation"
+
+# Results Visibility (Faculty A)
+FAC_RESULTS=$(log_request "GET" "/quizzes/$ALPHA_QUIZ_ID/results" "" "$FAC_TOKEN" "Faculty GET Quiz Results")
+assert_status "200" "Faculty Results Status"
+assert_contains "$FAC_RESULTS" "$STUDENT_EMAIL" "Result Contains Student"
+
+# Result Ownership (Faculty B)
+log_request "GET" "/quizzes/$ALPHA_QUIZ_ID/results" "" "$FAC_B_TOKEN" "Fail: Faculty B GET Faculty A Results"
+ACTUAL_STATUS=$(cat "$STATUS_FILE")
+if [ "$ACTUAL_STATUS" != "404" ] && [ "$ACTUAL_STATUS" != "403" ]; then
+  log "ASSERT FAIL: Cross Faculty Results blocked check failed. Got $ACTUAL_STATUS"
+  exit 1
+fi
+log "PASS: Cross Faculty Results Blocked"
+
+# Delete Protection
+log_request "DELETE" "/quizzes/$ALPHA_QUIZ_ID" "" "$FAC_TOKEN" "Fail: Delete Attempted Quiz"
+assert_status "409" "Delete Protection Enforced"
 
 echo ""
 log "=================== SELF DELETE ==================="
@@ -255,3 +455,20 @@ log_request "DELETE" "/leaves/$CANCEL_ID" "" "$STUDENT_TOKEN" "Student Cancels L
 echo ""
 log "=================== TEST RUN COMPLETE ==================="
 log "Results saved to $OUTPUT_FILE"
+
+echo ""
+log "========================================="
+log "QUIZ TEST SUMMARY"
+log "================="
+log "Quiz CRUD                  PASS"
+log "Quiz RBAC                  PASS"
+log "Quiz Ownership             PASS"
+log "Quiz Visibility            PASS"
+log "Quiz Validation            PASS"
+log "Quiz Immutability          PASS"
+log "Quiz Delete Protection     PASS"
+log "Quiz Attempts              PASS"
+log "Quiz Results               PASS"
+log "Tenant Isolation           PASS"
+log ""
+log "ALL TESTS PASSED"

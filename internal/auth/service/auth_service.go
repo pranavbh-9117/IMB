@@ -18,16 +18,13 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/tokenutil"
 )
 
-// authService is the concrete implementation of AuthService.
+// authService implements AuthService
 type authService struct {
 	userRepo  repository.UserRepository
 	tokenRepo repository.RefreshTokenRepository
 	cfg       config.JWTConfig
 }
 
-// NewAuthService constructs an AuthService with the provided repository
-// interfaces and JWT configuration. It returns the interface type to enforce
-// the abstraction boundary at the call site.
 func NewAuthService(
 	userRepo repository.UserRepository,
 	tokenRepo repository.RefreshTokenRepository,
@@ -40,8 +37,7 @@ func NewAuthService(
 	}
 }
 
-// Login verifies the provided email and password, checks that the account is
-// active, and issues a LoginResult on success.
+// Login Service
 func (s *authService) Login(ctx context.Context, email, plainPassword string) (*LoginResult, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 
@@ -78,9 +74,7 @@ func (s *authService) Login(ctx context.Context, email, plainPassword string) (*
 	}, nil
 }
 
-// Refresh validates the incoming raw refresh token, revokes it (rotation),
-// re-loads the user from the database to pick up any role or institution
-// changes, and issues a new TokenPair.
+// Refresh Token service
 func (s *authService) Refresh(ctx context.Context, rawRefreshToken string) (*TokenPair, error) {
 	hash := tokenutil.HashRefreshToken(rawRefreshToken)
 
@@ -105,7 +99,6 @@ func (s *authService) Refresh(ctx context.Context, rawRefreshToken string) (*Tok
 		return nil, ErrAccountInactive
 	}
 
-	// Rotation: revoke the consumed token before issuing a new pair.
 	if err := s.tokenRepo.RevokeByHash(ctx, hash); err != nil {
 		return nil, fmt.Errorf("auth service: refresh: revoke old token: %w", err)
 	}
@@ -113,7 +106,7 @@ func (s *authService) Refresh(ctx context.Context, rawRefreshToken string) (*Tok
 	return s.issueTokenPair(ctx, user)
 }
 
-// Logout revokes the refresh token for the current session.
+// Logout Service
 func (s *authService) Logout(ctx context.Context, rawRefreshToken string) error {
 	hash := tokenutil.HashRefreshToken(rawRefreshToken)
 
@@ -131,15 +124,13 @@ func (s *authService) Logout(ctx context.Context, rawRefreshToken string) error 
 	return nil
 }
 
-// ChangePassword verifies the current password, replaces it with a hash of
-// the new password, and revokes all active sessions for the user.
+// ChangePassword Service
 func (s *authService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
 	user, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("auth service: change password: find user: %w", err)
 	}
 
-	// Google-only accounts cannot set a password through this flow.
 	if user.PasswordHash == "" {
 		return ErrInvalidCredentials
 	}
@@ -164,9 +155,7 @@ func (s *authService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 	return nil
 }
 
-// issueTokenPair is a shared helper that generates a signed access token and
-// a new raw refresh token, persists the refresh token hash, and returns the
-// TokenPair to the caller.
+// issueTokenPair helper function to generate JWT and RefreshToken
 func (s *authService) issueTokenPair(ctx context.Context, user *domain.User) (*TokenPair, error) {
 	institutionID := ""
 	if user.InstitutionID != nil {

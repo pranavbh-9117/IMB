@@ -8,10 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// FormatBindingError returns a human-readable summary of a Gin binding or
-// validation error. For go-playground/validator.ValidationErrors each failing
-// field is described individually; for any other error the raw message is
-// returned as-is.
+// Returns Human Readable Errors
 func FormatBindingError(err error) string {
 	var ve validator.ValidationErrors
 	if ok := isValidationErrors(err, &ve); ok {
@@ -25,7 +22,7 @@ func FormatBindingError(err error) string {
 	return err.Error()
 }
 
-// isValidationErrors performs a type-assertion to validator.ValidationErrors.
+// Check error is of type ValidationError
 func isValidationErrors(err error, target *validator.ValidationErrors) bool {
 	if ve, ok := err.(validator.ValidationErrors); ok {
 		*target = ve
@@ -34,7 +31,7 @@ func isValidationErrors(err error, target *validator.ValidationErrors) bool {
 	return false
 }
 
-// fieldMessage converts a single FieldError into a readable sentence.
+// convert field error into message
 func fieldMessage(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":

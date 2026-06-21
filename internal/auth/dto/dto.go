@@ -1,19 +1,19 @@
 // Package dto provides dto functionality for the IMB platform.
 package dto
 
-// LoginRequest carries the credentials for email+password authentication.
+// LoginRequest
 type LoginRequest struct {
 	Email    string `json:"email"    binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-// ChangePasswordRequest carries the current and replacement passwords.
+// ChangePasswordRequest
 type ChangePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required"`
 	NewPassword string `json:"new_password" binding:"required,min=6"`
 }
 
-// UserResponse is the user profile fragment included in the login response.
+// UserResponse
 type UserResponse struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -21,16 +21,13 @@ type UserResponse struct {
 	Role  string `json:"role"`
 }
 
-// LoginResponse is the data payload returned by POST /auth/login.
-// The refresh token is delivered via an HttpOnly cookie and is absent from
-// this struct.
+// LoginResponse
 type LoginResponse struct {
 	AccessToken string       `json:"access_token"`
 	User        UserResponse `json:"user"`
 }
 
-// RefreshResponse is the data payload returned by POST /auth/refresh.
-// The new refresh token is delivered via an HttpOnly cookie.
+// RefreshResponse
 type RefreshResponse struct {
 	AccessToken string `json:"access_token"`
 }

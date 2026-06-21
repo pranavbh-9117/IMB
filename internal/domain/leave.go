@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// LeaveStatus represents the current approval state of a leave request.
+// Types of Leave Status
 type LeaveStatus string
 
 const (
@@ -17,9 +17,7 @@ const (
 	LeaveStatusCancelled LeaveStatus = "cancelled"
 )
 
-// LeaveBalance tracks the total allocated leave days and how many have been
-// consumed for a given user within their institution. Leave is not
-// categorised by type.
+// LeaveBalance Model
 type LeaveBalance struct {
 	Base
 
@@ -31,9 +29,7 @@ type LeaveBalance struct {
 	UsedDays      int         `gorm:"default:0"`
 }
 
-// LeaveRequest is a formal application for leave submitted by a user.
-// ReviewedBy and ReviewedAt remain nil until an authorised reviewer acts on
-// the request.
+// LeaveRequest Model
 type LeaveRequest struct {
 	Base
 

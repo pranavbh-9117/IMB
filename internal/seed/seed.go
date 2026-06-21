@@ -12,13 +12,7 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/password"
 )
 
-// Run seeds the Super Admin account if one does not already exist.
-// It is safe to call on every application startup — if a user with the
-// configured email is found the function returns nil immediately without
-// modifying any data.
-//
-// The caller is responsible for providing an open, healthy *gorm.DB instance
-// and a fully populated config.SeedConfig.
+// Populate Super Admin to the DB.
 func Run(db *gorm.DB, cfg config.SeedConfig) error {
 	var existing domain.User
 
@@ -28,7 +22,6 @@ func Run(db *gorm.DB, cfg config.SeedConfig) error {
 	}
 
 	if err == nil {
-		// Super Admin already exists — nothing to do.
 		return nil
 	}
 

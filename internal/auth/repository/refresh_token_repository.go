@@ -12,14 +12,11 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/domain"
 )
 
-// refreshTokenRepository is the GORM-backed implementation of
-// RefreshTokenRepository.
+// refreshTokenRepository implements RefreshTokenRepository interface
 type refreshTokenRepository struct {
 	db *gorm.DB
 }
 
-// NewRefreshTokenRepository returns a RefreshTokenRepository backed by the
-// provided *gorm.DB.
 func NewRefreshTokenRepository(db *gorm.DB) RefreshTokenRepository {
 	return &refreshTokenRepository{db: db}
 }
@@ -34,9 +31,7 @@ func (r *refreshTokenRepository) Create(ctx context.Context, token *domain.Refre
 	return nil
 }
 
-// FindByHash retrieves a refresh token record by its SHA-256 hex digest.
-// The returned record may be revoked or expired; validity checks are the
-// responsibility of the service layer.
+// FindByHash retrieves a refresh token record
 func (r *refreshTokenRepository) FindByHash(ctx context.Context, hash string) (*domain.RefreshToken, error) {
 	var token domain.RefreshToken
 
@@ -53,7 +48,7 @@ func (r *refreshTokenRepository) FindByHash(ctx context.Context, hash string) (*
 	return &token, nil
 }
 
-// RevokeByHash marks a single refresh token as revoked by its hash digest.
+// RevokeByHash revokes RefreshTokens
 func (r *refreshTokenRepository) RevokeByHash(ctx context.Context, hash string) error {
 	err := r.db.WithContext(ctx).
 		Model(&domain.RefreshToken{}).
@@ -66,8 +61,7 @@ func (r *refreshTokenRepository) RevokeByHash(ctx context.Context, hash string) 
 	return nil
 }
 
-// RevokeAllByUserID marks every refresh token belonging to the given user as
-// revoked. Used for logout-everywhere and password change flows.
+// Revokes all refreshToken for a user
 func (r *refreshTokenRepository) RevokeAllByUserID(ctx context.Context, userID uuid.UUID) error {
 	err := r.db.WithContext(ctx).
 		Model(&domain.RefreshToken{}).

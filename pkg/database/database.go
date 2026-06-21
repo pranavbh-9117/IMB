@@ -12,7 +12,7 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/config"
 )
 
-// Pool configuration constants
+// Pool configuration
 const (
 	maxOpenConns    = 25
 	maxIdleConns    = 10
@@ -20,10 +20,7 @@ const (
 	connMaxIdleTime = 2 * time.Minute
 )
 
-// New opens a PostgreSQL connection using the provided DatabaseConfig,
-// applies connection pool settings, and returns a *gorm.DB instance.
-// An error is returned if the connection cannot be established or the
-// pool cannot be configured.
+// Create Postgresql connection
 func New(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(buildDSN(cfg)), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
@@ -45,8 +42,7 @@ func New(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-// HealthCheck verifies the database connection is alive by sending a
-// lightweight ping to the server. Returns a wrapped error if unreachable.
+// Check DB is Reachable
 func HealthCheck(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -60,7 +56,7 @@ func HealthCheck(db *gorm.DB) error {
 	return nil
 }
 
-// buildDSN constructs a PostgreSQL DSN string from the provided config fields.
+// Builds Connection Strings
 func buildDSN(cfg config.DatabaseConfig) string {
 	return fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",

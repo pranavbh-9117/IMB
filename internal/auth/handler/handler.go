@@ -17,15 +17,11 @@ import (
 
 const refreshTokenCookie = "refresh_token"
 
-// AuthHandler holds the auth service and JWT config needed by all four
-// authentication endpoints.
 type AuthHandler struct {
 	svc service.AuthService
 	cfg config.JWTConfig
 }
 
-// NewAuthHandler constructs an AuthHandler. It returns a concrete pointer
-// so routes can register individual handler methods.
 func NewAuthHandler(svc service.AuthService, cfg config.JWTConfig) *AuthHandler {
 	return &AuthHandler{svc: svc, cfg: cfg}
 }
@@ -155,11 +151,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	response.OK(c, "password changed successfully", nil)
 }
 
-// --- private helpers ---
 
-// setRefreshTokenCookie writes the refresh token as an HttpOnly cookie.
-// Secure is set to false for local development; set to true in production
-// when serving over HTTPS.
 func (h *AuthHandler) setRefreshTokenCookie(c *gin.Context, rawToken string) {
 	c.SetSameSite(http.SameSiteStrictMode)
 	c.SetCookie(
@@ -173,14 +165,13 @@ func (h *AuthHandler) setRefreshTokenCookie(c *gin.Context, rawToken string) {
 	)
 }
 
-// clearRefreshTokenCookie expires the refresh token cookie immediately.
+
 func (h *AuthHandler) clearRefreshTokenCookie(c *gin.Context) {
 	c.SetSameSite(http.SameSiteStrictMode)
 	c.SetCookie(refreshTokenCookie, "", -1, "/", "", false, true)
 }
 
-// handleServiceError maps auth service sentinel errors to HTTP responses.
-// Unknown errors are logged as internal server errors without leaking details.
+
 func (h *AuthHandler) handleServiceError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrInvalidCredentials):

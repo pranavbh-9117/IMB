@@ -1,16 +1,14 @@
 // Package response provides response functionality for the IMB platform.
 package response
 
-// SwaggerResponse is a generic wrapper exclusively used for Swaggo OpenAPI generation
-// to represent the standard JSON envelope with typed data.
+// SwaggerResponse 
 type SwaggerResponse[T any] struct {
 	Success bool   `json:"success" example:"true"`
 	Message string `json:"message" example:"operation successful"`
 	Data    T      `json:"data"`
 }
 
-// SwaggerErrorResponse is exclusively used for Swaggo OpenAPI generation
-// to represent the standard JSON error envelope.
+// SwaggerErrorResponse 
 type SwaggerErrorResponse struct {
 	Success bool        `json:"success" example:"false"`
 	Message string      `json:"message" example:"error description"`

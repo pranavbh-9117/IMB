@@ -712,6 +712,651 @@
                 }
             }
         },
+        "/quizzes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of quizzes. Faculty see their own quizzes. Students see published quizzes for their institution.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "List Quizzes",
+                "responses": {
+                    "200": {
+                        "description": "Quizzes Retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_quiz_dto_QuizResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new quiz. Faculty only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Create Quiz",
+                "parameters": [
+                    {
+                        "description": "Quiz Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.CreateQuizRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Quiz Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_QuizResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves a quiz by its ID. Faculty can view their own quizzes. Students can view published quizzes for their institution.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Get Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz Retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_QuizResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing draft quiz metadata. Faculty only. Published quizzes cannot be modified.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Update Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.UpdateQuizRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz Updated",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes an existing quiz. Faculty only. Quizzes with attempts cannot be deleted.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Delete Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz Deleted",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/attempt": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submits a quiz attempt. Students only. Quiz must be published and student must belong to the same institution. One attempt per student.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Attempts"
+                ],
+                "summary": "Submit Quiz Attempt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Attempt Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_attempt_dto.SubmitAttemptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Attempt Submitted",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/publish": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Publishes a quiz, making it available to students. Faculty only.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Publish Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz Published",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/questions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a new question with options to a draft quiz. Faculty only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Create Question",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Question Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.CreateQuestionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Question Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_QuestionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/results": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves performance data for a specific quiz. Faculty only. Can only view results for quizzes they created.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Attempts"
+                ],
+                "summary": "Get Quiz Results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz Results Retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_attempt_dto_FacultyResultResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/results": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all quiz results for the authenticated student.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Attempts"
+                ],
+                "summary": "Get Student Results",
+                "responses": {
+                    "200": {
+                        "description": "Results Retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_attempt_dto_StudentResultResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -1022,6 +1667,90 @@
         }
     },
     "definitions": {
+        "github_com_pranavbh-9117_IMB_internal_attempt_dto.AnswerSubmission": {
+            "type": "object",
+            "required": [
+                "question_id"
+            ],
+            "properties": {
+                "question_id": {
+                    "type": "string"
+                },
+                "selected_option_id": {
+                    "description": "Nullable if the student skips the question",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_attempt_dto.FacultyResultResponse": {
+            "type": "object",
+            "properties": {
+                "attempt_id": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "student_email": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                },
+                "student_name": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "total_marks": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_attempt_dto.StudentResultResponse": {
+            "type": "object",
+            "properties": {
+                "attempt_id": {
+                    "type": "string"
+                },
+                "quiz_id": {
+                    "type": "string"
+                },
+                "quiz_title": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "total_marks": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_attempt_dto.SubmitAttemptRequest": {
+            "type": "object",
+            "required": [
+                "answers"
+            ],
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_attempt_dto.AnswerSubmission"
+                    }
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_internal_auth_dto.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -1245,6 +1974,173 @@
                 }
             }
         },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.CreateQuestionRequest": {
+            "type": "object",
+            "required": [
+                "marks",
+                "options",
+                "text"
+            ],
+            "properties": {
+                "marks": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "options": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.OptionRequest"
+                    }
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.CreateQuizRequest": {
+            "type": "object",
+            "required": [
+                "duration_minutes",
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.OptionRequest": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.OptionResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_correct": {
+                    "description": "May be hidden from students depending on endpoint",
+                    "type": "boolean"
+                },
+                "order_index": {
+                    "type": "integer"
+                },
+                "question_id": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.QuestionResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "marks": {
+                    "type": "integer"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.OptionResponse"
+                    }
+                },
+                "order_index": {
+                    "type": "integer"
+                },
+                "quiz_id": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.QuizResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "institution_id": {
+                    "type": "string"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.QuestionResponse"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_marks": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.UpdateQuizRequest": {
+            "type": "object",
+            "required": [
+                "duration_minutes",
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_internal_user_dto.CreateRequest": {
             "type": "object",
             "required": [
@@ -1356,6 +2252,44 @@
                 }
             }
         },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_attempt_dto_FacultyResultResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_attempt_dto.FacultyResultResponse"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_attempt_dto_StudentResultResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_attempt_dto.StudentResultResponse"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse": {
             "type": "object",
             "properties": {
@@ -1382,6 +2316,25 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_leave_dto.LeaveResponse"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_quiz_dto_QuizResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.QuizResponse"
                     }
                 },
                 "message": {
@@ -1466,6 +2419,38 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_leave_dto.LeaveResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_QuestionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.QuestionResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_QuizResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.QuizResponse"
                 },
                 "message": {
                     "type": "string",

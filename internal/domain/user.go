@@ -7,8 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Role is the access-control designation for a platform user. It is stored
-// as a VARCHAR column and enforced at the application layer.
+// Types of Roles a user can exist with
 type Role string
 
 const (
@@ -18,10 +17,7 @@ const (
 	RoleStudent        Role = "student"
 )
 
-// User represents a human actor on the platform. A super_admin has no
-// institution affiliation (InstitutionID is nil). All other roles belong to
-// exactly one institution. An account may be created via email+password or
-// Google OAuth; both paths share the same entity.
+// User Model
 type User struct {
 	Base
 
@@ -36,9 +32,7 @@ type User struct {
 	MustChangePassword bool         `gorm:"default:false"`
 }
 
-// RefreshToken stores a hashed refresh token issued to a user. The raw token
-// is never persisted; only its SHA-256 hash is stored. Tokens can be
-// explicitly revoked or expire naturally.
+// RefreshToken Model
 type RefreshToken struct {
 	Base
 
