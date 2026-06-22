@@ -15,6 +15,7 @@ type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	OAuth    OAuthConfig
 	Seed     SeedConfig
 }
 
@@ -45,6 +46,13 @@ type JWTConfig struct {
 type SeedConfig struct {
 	SuperAdminEmail    string
 	SuperAdminPassword string
+}
+
+// OAuth Configuration
+type OAuthConfig struct {
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleCallbackURL  string
 }
 
 // Loads configuration  from .env
@@ -84,6 +92,11 @@ func Load() (*Config, error) {
 			SuperAdminEmail:    os.Getenv("SUPER_ADMIN_EMAIL"),
 			SuperAdminPassword: os.Getenv("SUPER_ADMIN_PASSWORD"),
 		},
+		OAuth: OAuthConfig{
+			GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+			GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+			GoogleCallbackURL:  os.Getenv("GOOGLE_CALLBACK_URL"),
+		},
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -110,6 +123,9 @@ func (c *Config) validate() error {
 		{"JWT_SECRET", c.JWT.Secret},
 		{"SUPER_ADMIN_EMAIL", c.Seed.SuperAdminEmail},
 		{"SUPER_ADMIN_PASSWORD", c.Seed.SuperAdminPassword},
+		{"GOOGLE_CLIENT_ID", c.OAuth.GoogleClientID},
+		{"GOOGLE_CLIENT_SECRET", c.OAuth.GoogleClientSecret},
+		{"GOOGLE_CALLBACK_URL", c.OAuth.GoogleCallbackURL},
 	}
 
 	var missing []string

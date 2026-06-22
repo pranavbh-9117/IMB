@@ -4,6 +4,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -152,6 +153,77 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 }
 
 
+// GoogleLogin godoc
+// @Summary Google OAuth Login
+// @Description Initiates the Google OAuth authorization code flow.
+// @Tags Authentication
+// @Produce json
+// @Success 302 "Redirects to Google"
+// @Router /auth/google/login [get]
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+	url, state := h.svc.GetGoogleLoginURL()
+
+	secure := false
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(
+		"oauth_state",
+		state,
+		600,
+		"/",
+		"",
+		secure,
+		true,
+	)
+
+	c.Redirect(http.StatusFound, url)
+}
+
+// GoogleCallback godoc
+// @Summary Google OAuth Callback
+// @Description Handles the callback from Google and returns standard login response.
+// @Tags Authentication
+// @Produce json
+// @Param code query string true "OAuth Authorization Code"
+// @Param state query string true "OAuth State Parameter"
+// @Success 200 {object} response.SwaggerResponse[dto.LoginResponse] "Google Login Successful"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Router /auth/google/callback [get]
+func (h *AuthHandler) GoogleCallback(c *gin.Context) {
+	state := c.Query("state")
+	code := c.Query("code")
+
+	cookieState, err := c.Cookie("oauth_state")
+	if err != nil || state != cookieState {
+		response.BadRequest(c, "invalid oauth state")
+		return
+	}
+
+	// Delete cookie
+	c.SetCookie("oauth_state", "", -1, "/", "", false, true)
+
+	result, err := h.svc.GoogleCallback(c.Request.Context(), code)
+	if err != nil {
+		h.handleServiceError(c, err)
+		return
+	}
+
+	h.setRefreshTokenCookie(c, result.RefreshToken)
+
+	response.OK(c, "Google login successful", dto.LoginResponse{
+		AccessToken: result.AccessToken,
+		User: dto.UserResponse{
+			ID:    result.User.ID,
+			Name:  result.User.Name,
+			Email: result.User.Email,
+			Role:  result.User.Role,
+		},
+	})
+}
+
+
 func (h *AuthHandler) setRefreshTokenCookie(c *gin.Context, rawToken string) {
 	c.SetSameSite(http.SameSiteStrictMode)
 	c.SetCookie(
@@ -182,6 +254,14 @@ func (h *AuthHandler) handleServiceError(c *gin.Context, err error) {
 		response.Unauthorized(c, err.Error())
 	case errors.Is(err, service.ErrWrongPassword):
 		response.BadRequest(c, err.Error())
+	case errors.Is(err, service.ErrGoogleEmailUnverified):
+		response.Forbidden(c, err.Error())
+	case errors.Is(err, service.ErrAccountNotProvisioned):
+		response.Forbidden(c, err.Error())
+	case errors.Is(err, service.ErrGoogleProfileMismatch):
+		response.Forbidden(c, err.Error())
+	case strings.Contains(err.Error(), "validate id_token") || strings.Contains(err.Error(), "invalid issuer") || strings.Contains(err.Error(), "no id_token in response"):
+		response.Unauthorized(c, "invalid google identity token")
 	default:
 		response.InternalServerError(c)
 	}
