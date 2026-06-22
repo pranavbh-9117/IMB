@@ -19,6 +19,8 @@ type UserRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 
 	UpdatePasswordHash(ctx context.Context, userID uuid.UUID, newHash string) error
+
+	UpdateGoogleID(ctx context.Context, userID uuid.UUID, googleID string) error
 }
 
 // RefreshTokenRepository

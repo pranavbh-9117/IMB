@@ -16,6 +16,9 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/jwtutil"
 	"github.com/pranavbh-9117/IMB/pkg/password"
 	"github.com/pranavbh-9117/IMB/pkg/tokenutil"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/idtoken"
 )
 
 // authService implements AuthService
@@ -23,17 +26,34 @@ type authService struct {
 	userRepo  repository.UserRepository
 	tokenRepo repository.RefreshTokenRepository
 	cfg       config.JWTConfig
+	oauthCfg  config.OAuthConfig
+	oauthConf *oauth2.Config
 }
 
 func NewAuthService(
 	userRepo repository.UserRepository,
 	tokenRepo repository.RefreshTokenRepository,
 	cfg config.JWTConfig,
+	oauthCfg config.OAuthConfig,
 ) AuthService {
+	oauthConf := &oauth2.Config{
+		ClientID:     oauthCfg.GoogleClientID,
+		ClientSecret: oauthCfg.GoogleClientSecret,
+		RedirectURL:  oauthCfg.GoogleCallbackURL,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+			"openid",
+		},
+		Endpoint: google.Endpoint,
+	}
+
 	return &authService{
 		userRepo:  userRepo,
 		tokenRepo: tokenRepo,
 		cfg:       cfg,
+		oauthCfg:  oauthCfg,
+		oauthConf: oauthConf,
 	}
 }
 
@@ -153,6 +173,79 @@ func (s *authService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 	}
 
 	return nil
+}
+
+func (s *authService) GetGoogleLoginURL() (url string, state string) {
+	state = uuid.New().String()
+	url = s.oauthConf.AuthCodeURL(state)
+	return url, state
+}
+
+func (s *authService) GoogleCallback(ctx context.Context, code string) (*LoginResult, error) {
+	token, err := s.oauthConf.Exchange(ctx, code)
+	if err != nil {
+		return nil, fmt.Errorf("auth service: google callback: exchange: %w", err)
+	}
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		return nil, errors.New("auth service: google callback: no id_token in response")
+	}
+
+	payload, err := idtoken.Validate(ctx, rawIDToken, s.oauthCfg.GoogleClientID)
+	if err != nil {
+		return nil, fmt.Errorf("auth service: google callback: validate id_token: %w", err)
+	}
+
+	if payload.Issuer != "accounts.google.com" && payload.Issuer != "https://accounts.google.com" {
+		return nil, errors.New("auth service: google callback: invalid issuer")
+	}
+
+	email, ok := payload.Claims["email"].(string)
+	if !ok {
+		return nil, errors.New("auth service: google callback: email not found in id_token")
+	}
+
+	emailVerified, ok := payload.Claims["email_verified"].(bool)
+	if !ok || !emailVerified {
+		return nil, ErrGoogleEmailUnverified
+	}
+
+	user, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrAccountNotProvisioned
+		}
+		return nil, fmt.Errorf("auth service: google callback: find user: %w", err)
+	}
+
+	if !user.IsActive {
+		return nil, ErrAccountInactive
+	}
+
+	if user.GoogleID == "" {
+		if err := s.userRepo.UpdateGoogleID(ctx, user.ID, payload.Subject); err != nil {
+			return nil, fmt.Errorf("auth service: google callback: link google id: %w", err)
+		}
+	} else if user.GoogleID != payload.Subject {
+		return nil, ErrGoogleProfileMismatch
+	}
+
+	pair, err := s.issueTokenPair(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResult{
+		AccessToken:  pair.AccessToken,
+		RefreshToken: pair.RefreshToken,
+		User: UserInfo{
+			ID:    user.ID.String(),
+			Name:  user.Name,
+			Email: user.Email,
+			Role:  string(user.Role),
+		},
+	}, nil
 }
 
 // issueTokenPair helper function to generate JWT and RefreshToken

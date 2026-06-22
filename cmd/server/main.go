@@ -11,6 +11,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -55,6 +56,7 @@ func main() {
 	//Loading configurations
 	cfg, err := config.Load()
 	if err != nil {
+		fmt.Printf("Failed to load config: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -94,7 +96,7 @@ func main() {
 	//Auth Module
 	userRepo := authrepo.NewUserRepository(db)
 	tokenRepo := authrepo.NewRefreshTokenRepository(db)
-	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT)
+	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT, cfg.OAuth)
 	authHandler := authhandler.NewAuthHandler(authSvc, cfg.JWT)
 
 	//Institution Module

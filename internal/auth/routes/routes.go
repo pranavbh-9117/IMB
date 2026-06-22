@@ -13,6 +13,9 @@ func Register(rg *gin.RouterGroup, h *handler.AuthHandler, authMiddleware gin.Ha
 	rg.POST("/refresh", h.Refresh)
 	rg.POST("/logout", h.Logout)
 
+	rg.GET("/google/login", h.GoogleLogin)
+	rg.GET("/google/callback", h.GoogleCallback)
+
 	protected := rg.Group("/")
 	protected.Use(authMiddleware)
 	protected.POST("/change-password", h.ChangePassword)

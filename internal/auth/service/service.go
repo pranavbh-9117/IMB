@@ -16,6 +16,10 @@ var (
 	ErrTokenInvalid = errors.New("refresh token is invalid or expired")
 
 	ErrWrongPassword = errors.New("current password is incorrect")
+
+	ErrGoogleEmailUnverified = errors.New("google account email is not verified")
+	ErrAccountNotProvisioned = errors.New("account not provisioned. Please contact administrator")
+	ErrGoogleProfileMismatch = errors.New("account linked to different Google profile")
 )
 
 type TokenPair struct {
@@ -45,4 +49,8 @@ type AuthService interface {
 	Logout(ctx context.Context, rawRefreshToken string) error
 
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
+
+	GetGoogleLoginURL() (url string, state string)
+
+	GoogleCallback(ctx context.Context, code string) (*LoginResult, error)
 }

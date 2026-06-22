@@ -66,3 +66,16 @@ func (r *userRepository) UpdatePasswordHash(ctx context.Context, userID uuid.UUI
 
 	return nil
 }
+
+// UpdateGoogleID links a Google Subject ID to an existing user.
+func (r *userRepository) UpdateGoogleID(ctx context.Context, userID uuid.UUID, googleID string) error {
+	err := r.db.WithContext(ctx).
+		Model(&domain.User{}).
+		Where("id = ?", userID).
+		Update("google_id", googleID).Error
+	if err != nil {
+		return fmt.Errorf("user repository: update google id: %w", err)
+	}
+
+	return nil
+}
