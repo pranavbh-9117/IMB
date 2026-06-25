@@ -125,7 +125,8 @@ func main() {
 	attemptHandler := attempthandler.NewAttemptHandler(attemptSvc)
 
 	//Gin Router
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
 
 	//Request Logger
 	r.Use(middleware.RequestLogger())

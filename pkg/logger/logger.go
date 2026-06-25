@@ -27,20 +27,29 @@ func Init(env string) {
 
 // Info logs
 func Info(ctx context.Context, msg string, args ...any) {
+	args = prependTraceID(ctx, args)
 	slog.InfoContext(ctx, msg, args...)
 }
 
 // Error logs
 func Error(ctx context.Context, msg string, args ...any) {
+	args = prependTraceID(ctx, args)
 	slog.ErrorContext(ctx, msg, args...)
 }
 
 // Warn logs 
 func Warn(ctx context.Context, msg string, args ...any) {
+	args = prependTraceID(ctx, args)
 	slog.WarnContext(ctx, msg, args...)
 }
 
 // Debug logs 
 func Debug(ctx context.Context, msg string, args ...any) {
+	args = prependTraceID(ctx, args)
 	slog.DebugContext(ctx, msg, args...)
+}
+
+func prependTraceID(ctx context.Context, args []any) []any {
+	traceID := GetTraceID(ctx)
+	return append([]any{"trace_id", traceID}, args...)
 }
