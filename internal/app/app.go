@@ -20,7 +20,6 @@ import (
 	leavehandler "github.com/pranavbh-9117/IMB/internal/leave/handler"
 	leaverepo "github.com/pranavbh-9117/IMB/internal/leave/repository"
 	leaveservice "github.com/pranavbh-9117/IMB/internal/leave/service"
-	"github.com/pranavbh-9117/IMB/internal/migration"
 	quizhandler "github.com/pranavbh-9117/IMB/internal/quiz/handler"
 	quizrepo "github.com/pranavbh-9117/IMB/internal/quiz/repository"
 	quizservice "github.com/pranavbh-9117/IMB/internal/quiz/service"
@@ -70,13 +69,6 @@ func NewApp() (*App, error) {
 		"conn_max_lifetime", cfg.Database.ConnMaxLifetime.String(),
 		"conn_max_idle_time", cfg.Database.ConnMaxIdleTime.String(),
 	)
-
-	// DB Migrations
-	if err := migration.Run(db); err != nil {
-		logger.Error(ctx, "Migration failed", "error", err)
-		return nil, fmt.Errorf("migration failed: %w", err)
-	}
-	logger.Info(ctx, "Database migration completed")
 
 	// HardSeeding Super Admin
 	if err := seed.Run(db, cfg.Seed); err != nil {
