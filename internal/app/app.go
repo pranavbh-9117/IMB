@@ -1,0 +1,152 @@
+package app
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+
+	attempthandler "github.com/pranavbh-9117/IMB/internal/attempt/handler"
+	attemptrepo "github.com/pranavbh-9117/IMB/internal/attempt/repository"
+	attemptservice "github.com/pranavbh-9117/IMB/internal/attempt/service"
+	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
+	authrepo "github.com/pranavbh-9117/IMB/internal/auth/repository"
+	authservice "github.com/pranavbh-9117/IMB/internal/auth/service"
+	insthandler "github.com/pranavbh-9117/IMB/internal/institution/handler"
+	instrepo "github.com/pranavbh-9117/IMB/internal/institution/repository"
+	instservice "github.com/pranavbh-9117/IMB/internal/institution/service"
+	leavehandler "github.com/pranavbh-9117/IMB/internal/leave/handler"
+	leaverepo "github.com/pranavbh-9117/IMB/internal/leave/repository"
+	leaveservice "github.com/pranavbh-9117/IMB/internal/leave/service"
+	"github.com/pranavbh-9117/IMB/internal/migration"
+	quizhandler "github.com/pranavbh-9117/IMB/internal/quiz/handler"
+	quizrepo "github.com/pranavbh-9117/IMB/internal/quiz/repository"
+	quizservice "github.com/pranavbh-9117/IMB/internal/quiz/service"
+	"github.com/pranavbh-9117/IMB/internal/seed"
+	userhandler "github.com/pranavbh-9117/IMB/internal/user/handler"
+	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
+	userservice "github.com/pranavbh-9117/IMB/internal/user/service"
+	"github.com/pranavbh-9117/IMB/pkg/config"
+	"github.com/pranavbh-9117/IMB/pkg/database"
+	"github.com/pranavbh-9117/IMB/pkg/logger"
+)
+
+type App struct {
+	router *gin.Engine
+	cfg    *config.Config
+	db     *gorm.DB
+}
+
+func NewApp() (*App, error) {
+	// Loading configurations
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Initializing logger
+	logger.Init(cfg.App.Env)
+
+	ctx := context.Background()
+
+	// Initializing DB
+	db, err := database.New(cfg.Database)
+	if err != nil {
+		logger.Error(ctx, "Failed to initialize database", "error", err)
+		return nil, fmt.Errorf("failed to initialize database: %w", err)
+	}
+
+	if err := database.HealthCheck(db); err != nil {
+		logger.Error(ctx, "Database health check failed", "error", err)
+		return nil, fmt.Errorf("database health check failed: %w", err)
+	}
+	logger.Info(ctx, "Database connected successfully")
+
+	// DB Migrations
+	if err := migration.Run(db); err != nil {
+		logger.Error(ctx, "Migration failed", "error", err)
+		return nil, fmt.Errorf("migration failed: %w", err)
+	}
+	logger.Info(ctx, "Database migration completed")
+
+	// HardSeeding Super Admin
+	if err := seed.Run(db, cfg.Seed); err != nil {
+		logger.Error(ctx, "Seed failed", "error", err)
+		return nil, fmt.Errorf("seed failed: %w", err)
+	}
+	logger.Info(ctx, "Database seed completed")
+
+	app := &App{
+		router: gin.New(),
+		cfg:    cfg,
+		db:     db,
+	}
+
+	app.router.Use(gin.Recovery())
+
+	// Initialize dependencies and routes
+	app.setupDependencies()
+
+	return app, nil
+}
+
+func (a *App) Start() error {
+	port := a.cfg.App.Port
+	if port == "" {
+		port = "8080"
+	}
+
+	logger.Info(context.Background(), "Starting server", "port", port)
+	if err := a.router.Run(":" + port); err != nil {
+		logger.Error(context.Background(), "Failed to start server", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (a *App) setupDependencies() {
+	db := a.db
+	cfg := a.cfg
+
+	// Auth Module
+	userRepo := authrepo.NewUserRepository(db)
+	tokenRepo := authrepo.NewRefreshTokenRepository(db)
+	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT, cfg.OAuth)
+	authHandler := authhandler.NewAuthHandler(authSvc, cfg.JWT)
+
+	// Institution Module
+	institutionRepo := instrepo.NewInstitutionRepository(db)
+	institutionSvc := instservice.NewInstitutionService(institutionRepo)
+	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
+
+	// Leave Module
+	leaveRepo := leaverepo.NewLeaveRepository(db)
+	leaveSvc := leaveservice.NewLeaveService(leaveRepo)
+	leaveHandler := leavehandler.NewLeaveHandler(leaveSvc)
+
+	// User Module
+	userManagementRepo := userrepo.NewUserRepository(db)
+	userSvc := userservice.NewUserService(userManagementRepo, leaveSvc)
+	userHandler := userhandler.NewUserHandler(userSvc)
+
+	// Quiz Module
+	quizRepo := quizrepo.NewQuizRepository(db)
+	quizSvc := quizservice.NewQuizService(quizRepo)
+	quizHandler := quizhandler.NewQuizHandler(quizSvc)
+
+	// Quiz Attempt Module
+	attemptRepo := attemptrepo.NewAttemptRepository(db)
+	attemptSvc := attemptservice.NewAttemptService(attemptRepo, quizSvc)
+	attemptHandler := attempthandler.NewAttemptHandler(attemptSvc)
+
+	// Setup routes
+	a.setupRoutes(
+		authHandler,
+		institutionHandler,
+		leaveHandler,
+		userHandler,
+		quizHandler,
+		attemptHandler,
+	)
+}
