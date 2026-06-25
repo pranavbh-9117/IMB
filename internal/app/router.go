@@ -10,6 +10,7 @@ import (
 	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
 	authroutes "github.com/pranavbh-9117/IMB/internal/auth/routes"
 	"github.com/pranavbh-9117/IMB/internal/domain"
+	"github.com/pranavbh-9117/IMB/internal/health"
 	insthandler "github.com/pranavbh-9117/IMB/internal/institution/handler"
 	instroutes "github.com/pranavbh-9117/IMB/internal/institution/routes"
 	leavehandler "github.com/pranavbh-9117/IMB/internal/leave/handler"
@@ -22,6 +23,7 @@ import (
 )
 
 func (a *App) setupRoutes(
+	healthHandler *health.HealthHandler,
 	authHandler *authhandler.AuthHandler,
 	institutionHandler *insthandler.InstitutionHandler,
 	leaveHandler *leavehandler.LeaveHandler,
@@ -40,6 +42,9 @@ func (a *App) setupRoutes(
 
 	// Swagger UI
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Health Check
+	r.GET("/health", healthHandler.Health)
 
 	// Middlewares
 	authMiddleware := middleware.RequireAuth(cfg.JWT.Secret)

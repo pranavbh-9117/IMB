@@ -3,7 +3,9 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,12 +29,16 @@ type AppConfig struct {
 
 // Database configuration
 type DatabaseConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Name     string
-	SSLMode  string
+	Host            string
+	Port            string
+	User            string
+	Password        string
+	Name            string
+	SSLMode         string
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
+	ConnMaxIdleTime time.Duration
 }
 
 // JWT Configuration
@@ -76,12 +82,16 @@ func Load() (*Config, error) {
 			Env:  os.Getenv("APP_ENV"),
 		},
 		Database: DatabaseConfig{
-			Host:     os.Getenv("DB_HOST"),
-			Port:     os.Getenv("DB_PORT"),
-			User:     os.Getenv("DB_USER"),
-			Password: os.Getenv("DB_PASSWORD"),
-			Name:     os.Getenv("DB_NAME"),
-			SSLMode:  os.Getenv("DB_SSLMODE"),
+			Host:            os.Getenv("DB_HOST"),
+			Port:            os.Getenv("DB_PORT"),
+			User:            os.Getenv("DB_USER"),
+			Password:        os.Getenv("DB_PASSWORD"),
+			Name:            os.Getenv("DB_NAME"),
+			SSLMode:         os.Getenv("DB_SSLMODE"),
+			MaxOpenConns:    parseIntOrDefault("DB_MAX_OPEN_CONNS", 25),
+			MaxIdleConns:    parseIntOrDefault("DB_MAX_IDLE_CONNS", 10),
+			ConnMaxLifetime: parseDurationOrDefault("DB_CONN_MAX_LIFETIME", 5*time.Minute),
+			ConnMaxIdleTime: parseDurationOrDefault("DB_CONN_MAX_IDLE_TIME", 2*time.Minute),
 		},
 		JWT: JWTConfig{
 			Secret:        os.Getenv("JWT_SECRET"),
@@ -158,4 +168,32 @@ func parseDuration(key string) (time.Duration, error) {
 	}
 
 	return d, nil
+}
+
+// parseIntOrDefault parses an integer from env, falling back to defaultVal
+func parseIntOrDefault(key string, defaultVal int) int {
+	val := os.Getenv(key)
+	if strings.TrimSpace(val) == "" {
+		return defaultVal
+	}
+	parsed, err := strconv.Atoi(val)
+	if err != nil {
+		log.Printf("WARNING: invalid value for %s: %q — falling back to default %d", key, val, defaultVal)
+		return defaultVal
+	}
+	return parsed
+}
+
+// parseDurationOrDefault parses a duration from env, falling back to defaultVal
+func parseDurationOrDefault(key string, defaultVal time.Duration) time.Duration {
+	val := os.Getenv(key)
+	if strings.TrimSpace(val) == "" {
+		return defaultVal
+	}
+	parsed, err := time.ParseDuration(val)
+	if err != nil {
+		log.Printf("WARNING: invalid value for %s: %q — falling back to default %s", key, val, defaultVal.String())
+		return defaultVal
+	}
+	return parsed
 }

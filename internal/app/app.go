@@ -13,6 +13,7 @@ import (
 	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
 	authrepo "github.com/pranavbh-9117/IMB/internal/auth/repository"
 	authservice "github.com/pranavbh-9117/IMB/internal/auth/service"
+	"github.com/pranavbh-9117/IMB/internal/health"
 	insthandler "github.com/pranavbh-9117/IMB/internal/institution/handler"
 	instrepo "github.com/pranavbh-9117/IMB/internal/institution/repository"
 	instservice "github.com/pranavbh-9117/IMB/internal/institution/service"
@@ -57,11 +58,18 @@ func NewApp() (*App, error) {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	if err := database.HealthCheck(db); err != nil {
+	if _, err := database.HealthCheck(db); err != nil {
 		logger.Error(ctx, "Database health check failed", "error", err)
 		return nil, fmt.Errorf("database health check failed: %w", err)
 	}
 	logger.Info(ctx, "Database connected successfully")
+
+	logger.Info(ctx, "Database connection pool initialized",
+		"max_open", cfg.Database.MaxOpenConns,
+		"max_idle", cfg.Database.MaxIdleConns,
+		"conn_max_lifetime", cfg.Database.ConnMaxLifetime.String(),
+		"conn_max_idle_time", cfg.Database.ConnMaxIdleTime.String(),
+	)
 
 	// DB Migrations
 	if err := migration.Run(db); err != nil {
@@ -115,6 +123,9 @@ func (a *App) setupDependencies() {
 	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT, cfg.OAuth)
 	authHandler := authhandler.NewAuthHandler(authSvc, cfg.JWT)
 
+	// Health Module
+	healthHandler := health.NewHealthHandler(db)
+
 	// Institution Module
 	institutionRepo := instrepo.NewInstitutionRepository(db)
 	institutionSvc := instservice.NewInstitutionService(institutionRepo)
@@ -142,6 +153,7 @@ func (a *App) setupDependencies() {
 
 	// Setup routes
 	a.setupRoutes(
+		healthHandler,
 		authHandler,
 		institutionHandler,
 		leaveHandler,

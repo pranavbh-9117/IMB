@@ -3,7 +3,6 @@ package database
 
 import (
 	"fmt"
-	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -12,13 +11,7 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/config"
 )
 
-// Pool configuration
-const (
-	maxOpenConns    = 25
-	maxIdleConns    = 10
-	connMaxLifetime = 5 * time.Minute
-	connMaxIdleTime = 2 * time.Minute
-)
+
 
 // Create Postgresql connection
 func New(cfg config.DatabaseConfig) (*gorm.DB, error) {
@@ -34,26 +27,42 @@ func New(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("database: failed to retrieve sql.DB: %w", err)
 	}
 
-	sqlDB.SetMaxOpenConns(maxOpenConns)
-	sqlDB.SetMaxIdleConns(maxIdleConns)
-	sqlDB.SetConnMaxLifetime(connMaxLifetime)
-	sqlDB.SetConnMaxIdleTime(connMaxIdleTime)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	sqlDB.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
 
 	return db, nil
 }
 
-// Check DB is Reachable
-func HealthCheck(db *gorm.DB) error {
+// PoolStats returns current connection pool statistics.
+type PoolStats struct {
+	OpenConnections int   `json:"open_connections"`
+	InUse           int   `json:"in_use"`
+	Idle            int   `json:"idle"`
+	WaitCount       int64 `json:"wait_count"`
+	MaxOpenConns    int   `json:"max_open_conns"`
+}
+
+// Check DB is Reachable and returns pool stats
+func HealthCheck(db *gorm.DB) (PoolStats, error) {
 	sqlDB, err := db.DB()
 	if err != nil {
-		return fmt.Errorf("database: failed to retrieve sql.DB for health check: %w", err)
+		return PoolStats{}, fmt.Errorf("database: failed to retrieve sql.DB for health check: %w", err)
 	}
 
 	if err := sqlDB.Ping(); err != nil {
-		return fmt.Errorf("database: health check failed: %w", err)
+		return PoolStats{}, fmt.Errorf("database: health check failed: %w", err)
 	}
 
-	return nil
+	stats := sqlDB.Stats()
+	return PoolStats{
+		OpenConnections: stats.OpenConnections,
+		InUse:           stats.InUse,
+		Idle:            stats.Idle,
+		WaitCount:       stats.WaitCount,
+		MaxOpenConns:    stats.MaxOpenConnections,
+	}, nil
 }
 
 // Builds Connection Strings
