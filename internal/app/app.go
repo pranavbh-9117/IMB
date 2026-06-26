@@ -27,8 +27,10 @@ import (
 	userhandler "github.com/pranavbh-9117/IMB/internal/user/handler"
 	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
 	userservice "github.com/pranavbh-9117/IMB/internal/user/service"
+	"github.com/pranavbh-9117/IMB/internal/workerpool"
 	"github.com/pranavbh-9117/IMB/pkg/config"
 	"github.com/pranavbh-9117/IMB/pkg/database"
+	"github.com/pranavbh-9117/IMB/pkg/email"
 	"github.com/pranavbh-9117/IMB/pkg/logger"
 )
 
@@ -36,6 +38,7 @@ type App struct {
 	router *gin.Engine
 	cfg    *config.Config
 	db     *gorm.DB
+	pool   workerpool.Pool
 }
 
 func NewApp() (*App, error) {
@@ -77,10 +80,22 @@ func NewApp() (*App, error) {
 	}
 	logger.Info(ctx, "Database seed completed")
 
+	// Initialize Application Singleton Worker Pool
+	wp, err := workerpool.New(workerpool.Options{
+		WorkersCount: 10,
+		QueueSize:    100,
+		Logger:       slogAdapter{},
+	})
+	if err != nil {
+		logger.Error(ctx, "Failed to initialize worker pool", "error", err)
+		return nil, fmt.Errorf("failed to initialize worker pool: %w", err)
+	}
+
 	app := &App{
 		router: gin.New(),
 		cfg:    cfg,
 		db:     db,
+		pool:   wp,
 	}
 
 	app.router.Use(gin.Recovery())
@@ -123,9 +138,12 @@ func (a *App) setupDependencies() {
 	institutionSvc := instservice.NewInstitutionService(institutionRepo)
 	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
 
+	// Email Subsystem
+	emailSvc := email.NewMailSender(cfg.SMTP)
+
 	// Leave Module
 	leaveRepo := leaverepo.NewLeaveRepository(db)
-	leaveSvc := leaveservice.NewLeaveService(leaveRepo)
+	leaveSvc := leaveservice.NewLeaveService(leaveRepo, emailSvc)
 	leaveHandler := leavehandler.NewLeaveHandler(leaveSvc)
 
 	// User Module
@@ -154,3 +172,14 @@ func (a *App) setupDependencies() {
 		attemptHandler,
 	)
 }
+
+type slogAdapter struct{}
+
+func (slogAdapter) Info(ctx context.Context, msg string, args ...any) {
+	logger.Info(ctx, msg, args...)
+}
+
+func (slogAdapter) Error(ctx context.Context, msg string, args ...any) {
+	logger.Error(ctx, msg, args...)
+}
+

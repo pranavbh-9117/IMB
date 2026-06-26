@@ -19,6 +19,7 @@ type Config struct {
 	JWT      JWTConfig
 	OAuth    OAuthConfig
 	Seed     SeedConfig
+	SMTP     SMTPConfig
 }
 
 // Server configuration.
@@ -59,6 +60,20 @@ type OAuthConfig struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleCallbackURL  string
+}
+
+// SMTP Configuration
+type SMTPConfig struct {
+	Host         string
+	Port         string
+	Username     string
+	Password     string
+	From         string
+	SendTimeout  time.Duration
+	MaxAttempts  int
+	InitialDelay time.Duration
+	MaxDelay     time.Duration
+	Multiplier   float64
 }
 
 // Loads configuration  from .env
@@ -107,6 +122,18 @@ func Load() (*Config, error) {
 			GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 			GoogleCallbackURL:  os.Getenv("GOOGLE_CALLBACK_URL"),
 		},
+		SMTP: SMTPConfig{
+			Host:         os.Getenv("SMTP_HOST"),
+			Port:         os.Getenv("SMTP_PORT"),
+			Username:     os.Getenv("SMTP_USERNAME"),
+			Password:     os.Getenv("SMTP_PASSWORD"),
+			From:         os.Getenv("SMTP_FROM"),
+			SendTimeout:  parseDurationOrDefault("SMTP_SEND_TIMEOUT", 30*time.Second),
+			MaxAttempts:  parseIntOrDefault("SMTP_RETRY_MAX_ATTEMPTS", 3),
+			InitialDelay: parseDurationOrDefault("SMTP_RETRY_INITIAL_DELAY", 500*time.Millisecond),
+			MaxDelay:     parseDurationOrDefault("SMTP_RETRY_MAX_DELAY", 10*time.Second),
+			Multiplier:   parseFloatOrDefault("SMTP_RETRY_MULTIPLIER", 2.0),
+		},
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -136,6 +163,11 @@ func (c *Config) validate() error {
 		{"GOOGLE_CLIENT_ID", c.OAuth.GoogleClientID},
 		{"GOOGLE_CLIENT_SECRET", c.OAuth.GoogleClientSecret},
 		{"GOOGLE_CALLBACK_URL", c.OAuth.GoogleCallbackURL},
+		{"SMTP_HOST", c.SMTP.Host},
+		{"SMTP_PORT", c.SMTP.Port},
+		{"SMTP_USERNAME", c.SMTP.Username},
+		{"SMTP_PASSWORD", c.SMTP.Password},
+		{"SMTP_FROM", c.SMTP.From},
 	}
 
 	var missing []string
@@ -193,6 +225,20 @@ func parseDurationOrDefault(key string, defaultVal time.Duration) time.Duration 
 	parsed, err := time.ParseDuration(val)
 	if err != nil {
 		log.Printf("WARNING: invalid value for %s: %q — falling back to default %s", key, val, defaultVal.String())
+		return defaultVal
+	}
+	return parsed
+}
+
+// parseFloatOrDefault parses a float64 from env, falling back to defaultVal
+func parseFloatOrDefault(key string, defaultVal float64) float64 {
+	val := os.Getenv(key)
+	if strings.TrimSpace(val) == "" {
+		return defaultVal
+	}
+	parsed, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		log.Printf("WARNING: invalid value for %s: %q — falling back to default %f", key, val, defaultVal)
 		return defaultVal
 	}
 	return parsed

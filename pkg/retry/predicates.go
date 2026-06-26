@@ -49,3 +49,30 @@ func IsOAuthTransientError(err error) bool {
 	}
 	return IsTransientError(err)
 }
+
+func IsSMTPTransientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	permanentKeywords := []string{
+		"550", "551", "552", "553", "554", "535", "530",
+		"user unknown", "relay access denied", "authentication failed",
+		"invalid syntax", "bad recipient",
+	}
+	for _, kw := range permanentKeywords {
+		if strings.Contains(msg, kw) {
+			return false
+		}
+	}
+	transientKeywords := []string{
+		"421", "450", "451", "452",
+		"greylisted", "try again later", "rate limit", "too many connections",
+	}
+	for _, kw := range transientKeywords {
+		if strings.Contains(msg, kw) {
+			return true
+		}
+	}
+	return IsTransientError(err)
+}
