@@ -40,5 +40,5 @@ api_test_results.txt
 server.log
 /specs
 
-migrate
-server
+/server
+/migrate
