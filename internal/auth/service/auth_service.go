@@ -13,6 +13,7 @@ import (
 	"github.com/pranavbh-9117/IMB/internal/auth/repository"
 	"github.com/pranavbh-9117/IMB/internal/domain"
 	"github.com/pranavbh-9117/IMB/pkg/config"
+	"github.com/pranavbh-9117/IMB/pkg/email"
 	"github.com/pranavbh-9117/IMB/pkg/jwtutil"
 	"github.com/pranavbh-9117/IMB/pkg/password"
 	"github.com/pranavbh-9117/IMB/pkg/retry"
@@ -26,16 +27,20 @@ import (
 type authService struct {
 	userRepo  repository.UserRepository
 	tokenRepo repository.RefreshTokenRepository
+	resetRepo repository.PasswordResetTokenRepository
 	cfg       config.JWTConfig
 	oauthCfg  config.OAuthConfig
 	oauthConf *oauth2.Config
+	emailSvc  email.EmailService
 }
 
 func NewAuthService(
 	userRepo repository.UserRepository,
 	tokenRepo repository.RefreshTokenRepository,
+	resetRepo repository.PasswordResetTokenRepository,
 	cfg config.JWTConfig,
 	oauthCfg config.OAuthConfig,
+	emailSvc email.EmailService,
 ) AuthService {
 	oauthConf := &oauth2.Config{
 		ClientID:     oauthCfg.GoogleClientID,
@@ -52,9 +57,11 @@ func NewAuthService(
 	return &authService{
 		userRepo:  userRepo,
 		tokenRepo: tokenRepo,
+		resetRepo: resetRepo,
 		cfg:       cfg,
 		oauthCfg:  oauthCfg,
 		oauthConf: oauthConf,
+		emailSvc:  emailSvc,
 	}
 }
 
@@ -304,3 +311,82 @@ func (s *authService) issueTokenPair(ctx context.Context, user *domain.User) (*T
 		RefreshToken: rawRefreshToken,
 	}, nil
 }
+
+// ForgotPassword Service
+func (s *authService) ForgotPassword(ctx context.Context, emailStr string) error {
+	emailStr = strings.ToLower(strings.TrimSpace(emailStr))
+
+	user, err := s.userRepo.FindByEmail(ctx, emailStr)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil
+		}
+		return fmt.Errorf("auth service: forgot password: %w", err)
+	}
+
+	if !user.IsActive {
+		return nil
+	}
+
+	resetToken, err := tokenutil.GenerateRefreshToken()
+	if err != nil {
+		return fmt.Errorf("auth service: forgot password: generate token: %w", err)
+	}
+
+	record := &domain.PasswordResetToken{
+		UserID:    user.ID,
+		TokenHash: tokenutil.HashRefreshToken(resetToken),
+		ExpiresAt: time.Now().Add(time.Hour),
+	}
+
+	if err := s.resetRepo.Create(ctx, record); err != nil {
+		return fmt.Errorf("auth service: forgot password: persist token: %w", err)
+	}
+
+	msg := email.Message{
+		To:      user.Email,
+		Subject: "Password Reset Request",
+		Body:    fmt.Sprintf("Hello %s,\n\nYou requested a password reset. Use this token to reset your password: %s\n\nIf you did not request this, please ignore this email.", user.Name, resetToken),
+	}
+
+	s.emailSvc.SendAsync(ctx, msg)
+	return nil
+}
+
+// ResetPassword Service
+func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	hash := tokenutil.HashRefreshToken(token)
+
+	record, err := s.resetRepo.FindByHash(ctx, hash)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrInvalidResetToken
+		}
+		return fmt.Errorf("auth service: reset password: %w", err)
+	}
+
+	if time.Now().After(record.ExpiresAt) || record.IsUsed {
+		return ErrInvalidResetToken
+	}
+
+	newHash, err := password.Hash(newPassword)
+	if err != nil {
+		return fmt.Errorf("auth service: reset password: hash password: %w", err)
+	}
+
+	if err := s.userRepo.UpdatePasswordHash(ctx, record.UserID, newHash); err != nil {
+		return fmt.Errorf("auth service: reset password: update password: %w", err)
+	}
+
+	if err := s.resetRepo.MarkAsUsed(ctx, record.ID); err != nil {
+		return fmt.Errorf("auth service: reset password: mark used: %w", err)
+	}
+
+	if err := s.tokenRepo.RevokeAllByUserID(ctx, record.UserID); err != nil {
+		return fmt.Errorf("auth service: reset password: revoke sessions: %w", err)
+	}
+
+	return nil
+}
+
+

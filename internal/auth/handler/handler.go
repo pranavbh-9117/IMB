@@ -152,6 +152,61 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	response.OK(c, "password changed successfully", nil)
 }
 
+// ForgotPassword godoc
+// @Summary Forgot Password
+// @Description Sends a password reset email if the email is registered.
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.ForgotPasswordRequest true "User Email"
+// @Success 200 {object} response.SwaggerResponse[any] "Reset Link Sent"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Router /auth/forgot-password [post]
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req dto.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, validator.FormatBindingError(err))
+		return
+	}
+
+	if err := h.svc.ForgotPassword(c.Request.Context(), req.Email); err != nil {
+		h.handleServiceError(c, err)
+		return
+	}
+
+	response.OK(c, "if the email exists, a password reset link has been sent", nil)
+}
+
+// ResetPassword godoc
+// @Summary Reset Password
+// @Description Resets user password using a valid reset token.
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.ResetPasswordRequest true "Token and New Password"
+// @Success 200 {object} response.SwaggerResponse[any] "Password Reset Successfully"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Router /auth/reset-password [post]
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req dto.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, validator.FormatBindingError(err))
+		return
+	}
+
+	if err := h.svc.ResetPassword(c.Request.Context(), req.Token, req.NewPassword); err != nil {
+		h.handleServiceError(c, err)
+		return
+	}
+
+	h.clearRefreshTokenCookie(c)
+
+	response.OK(c, "password reset successfully", nil)
+}
+
+
+
+
 
 // GoogleLogin godoc
 // @Summary Google OAuth Login
@@ -252,6 +307,8 @@ func (h *AuthHandler) handleServiceError(c *gin.Context, err error) {
 		response.Forbidden(c, err.Error())
 	case errors.Is(err, service.ErrTokenInvalid):
 		response.Unauthorized(c, err.Error())
+	case errors.Is(err, service.ErrInvalidResetToken):
+		response.BadRequest(c, err.Error())
 	case errors.Is(err, service.ErrWrongPassword):
 		response.BadRequest(c, err.Error())
 	case errors.Is(err, service.ErrGoogleEmailUnverified):

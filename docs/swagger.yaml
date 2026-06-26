@@ -5,7 +5,6 @@ definitions:
       question_id:
         type: string
       selected_option_id:
-        description: Nullable if the student skips the question
         type: string
     required:
     - question_id
@@ -66,6 +65,13 @@ definitions:
     - new_password
     - old_password
     type: object
+  github_com_pranavbh-9117_IMB_internal_auth_dto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   github_com_pranavbh-9117_IMB_internal_auth_dto.LoginRequest:
     properties:
       email:
@@ -88,6 +94,17 @@ definitions:
     properties:
       access_token:
         type: string
+    type: object
+  github_com_pranavbh-9117_IMB_internal_auth_dto.ResetPasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
     type: object
   github_com_pranavbh-9117_IMB_internal_auth_dto.UserResponse:
     properties:
@@ -139,7 +156,7 @@ definitions:
       phone:
         type: string
     type: object
-  github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateRequest:
+  github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateInstitutionInput:
     properties:
       address:
         type: string
@@ -195,7 +212,6 @@ definitions:
   github_com_pranavbh-9117_IMB_internal_leave_dto.ProcessLeaveRequest:
     properties:
       note:
-        description: Optional comment
         maxLength: 500
         type: string
       status:
@@ -252,7 +268,6 @@ definitions:
       id:
         type: string
       is_correct:
-        description: May be hidden from students depending on endpoint
         type: boolean
       order_index:
         type: integer
@@ -602,6 +617,79 @@ paths:
       summary: Change Password
       tags:
       - Authentication
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset email if the email is registered.
+      parameters:
+      - description: User Email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset Link Sent
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      summary: Forgot Password
+      tags:
+      - Authentication
+  /auth/google/callback:
+    get:
+      description: Handles the callback from Google and returns standard login response.
+      parameters:
+      - description: OAuth Authorization Code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth State Parameter
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Google Login Successful
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_auth_dto_LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      summary: Google OAuth Callback
+      tags:
+      - Authentication
+  /auth/google/login:
+    get:
+      description: Initiates the Google OAuth authorization code flow.
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirects to Google
+      summary: Google OAuth Login
+      tags:
+      - Authentication
   /auth/login:
     post:
       consumes:
@@ -666,6 +754,32 @@ paths:
           schema:
             $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
       summary: Refresh Token
+      tags:
+      - Authentication
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets user password using a valid reset token.
+      parameters:
+      - description: Token and New Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password Reset Successfully
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      summary: Reset Password
       tags:
       - Authentication
   /institutions:
@@ -836,7 +950,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateRequest'
+          $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateInstitutionInput'
       produces:
       - application/json
       responses:
