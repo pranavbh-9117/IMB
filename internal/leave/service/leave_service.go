@@ -11,14 +11,17 @@ import (
 
 	"github.com/pranavbh-9117/IMB/internal/domain"
 	"github.com/pranavbh-9117/IMB/internal/leave/repository"
+	"github.com/pranavbh-9117/IMB/internal/leave/templates"
+	"github.com/pranavbh-9117/IMB/pkg/email"
 )
 
 type leaveService struct {
-	repo repository.LeaveRepository
+	repo     repository.LeaveRepository
+	emailSvc email.EmailService
 }
 
-func NewLeaveService(repo repository.LeaveRepository) LeaveService {
-	return &leaveService{repo: repo}
+func NewLeaveService(repo repository.LeaveRepository, emailSvc email.EmailService) LeaveService {
+	return &leaveService{repo: repo, emailSvc: emailSvc}
 }
 
 // InitializeBalance when user is created
@@ -120,13 +123,15 @@ func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, revi
 		return fmt.Errorf("%w: invalid target status", ErrInvalidInput)
 	}
 
-	return s.repo.DoInTransaction(ctx, func(txCtx context.Context) error {
-		req, err := s.repo.GetRequestByID(txCtx, requestID)
-		if err != nil {
-			if errors.Is(err, repository.ErrNotFound) {
+	var req *domain.LeaveRequest
+	err := s.repo.DoInTransaction(ctx, func(txCtx context.Context) error {
+		var fetchErr error
+		req, fetchErr = s.repo.GetRequestByID(txCtx, requestID)
+		if fetchErr != nil {
+			if errors.Is(fetchErr, repository.ErrNotFound) {
 				return ErrRequestNotFound
 			}
-			return fmt.Errorf("leave service: fetch request: %w", err)
+			return fmt.Errorf("leave service: fetch request: %w", fetchErr)
 		}
 
 		if req.InstitutionID != reviewerInstID {
@@ -171,6 +176,20 @@ func (s *leaveService) ProcessLeaveApproval(ctx context.Context, requestID, revi
 		}
 
 		return nil
+	})
+
+	if err == nil && req != nil && s.emailSvc != nil {
+		s.dispatchLeaveNotification(ctx, req, newStatus, note)
+	}
+	return err
+}
+
+func (s *leaveService) dispatchLeaveNotification(ctx context.Context, req *domain.LeaveRequest, status domain.LeaveStatus, note string) {
+	subject, body := templates.BuildLeaveNotification(req, status, note)
+	s.emailSvc.SendAsync(ctx, email.Message{
+		To:      req.User.Email,
+		Subject: subject,
+		Body:    body,
 	})
 }
 

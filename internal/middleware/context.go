@@ -15,6 +15,7 @@ const (
 	userIDKey        = "auth.user_id"
 	roleKey          = "auth.role"
 	institutionIDKey = "auth.institution_id"
+	traceIDKey       = "trace_id"
 )
 
 //  Custom error indicates that a protected handler was mounted without the RequireAuth middleware.

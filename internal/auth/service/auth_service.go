@@ -15,6 +15,7 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/config"
 	"github.com/pranavbh-9117/IMB/pkg/jwtutil"
 	"github.com/pranavbh-9117/IMB/pkg/password"
+	"github.com/pranavbh-9117/IMB/pkg/retry"
 	"github.com/pranavbh-9117/IMB/pkg/tokenutil"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -181,6 +182,16 @@ func (s *authService) GetGoogleLoginURL() (url string, state string) {
 	return url, state
 }
 
+// OAuthRetryConfig 
+var OAuthRetryConfig = retry.Config{
+	MaxAttempts:  3,
+	InitialDelay: 200 * time.Millisecond,
+	MaxDelay:     2 * time.Second,
+	Multiplier:   2.0,
+	Jitter:       0.3,
+	ShouldRetry:  retry.IsOAuthTransientError,
+}
+
 func (s *authService) GoogleCallback(ctx context.Context, code string) (*LoginResult, error) {
 	token, err := s.oauthConf.Exchange(ctx, code)
 	if err != nil {
@@ -192,7 +203,14 @@ func (s *authService) GoogleCallback(ctx context.Context, code string) (*LoginRe
 		return nil, errors.New("auth service: google callback: no id_token in response")
 	}
 
-	payload, err := idtoken.Validate(ctx, rawIDToken, s.oauthCfg.GoogleClientID)
+	var payload *idtoken.Payload
+
+	//retry mechanism
+	err = retry.Do(ctx, func() error {
+		var verifyErr error
+		payload, verifyErr = idtoken.Validate(ctx, rawIDToken, s.oauthCfg.GoogleClientID)
+		return verifyErr
+	}, OAuthRetryConfig)
 	if err != nil {
 		return nil, fmt.Errorf("auth service: google callback: validate id_token: %w", err)
 	}

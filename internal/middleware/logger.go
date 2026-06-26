@@ -14,9 +14,18 @@ import (
 func RequestLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		reqID := uuid.New().String()
-		c.Set("request_id", reqID)
-		c.Writer.Header().Set("X-Request-ID", reqID)
+
+		traceID := c.GetHeader("X-Trace-ID")
+		if _, err := uuid.Parse(traceID); err != nil {
+			traceID = uuid.New().String()
+		}
+
+		c.Set(traceIDKey, traceID)
+		c.Writer.Header().Set("X-Trace-ID", traceID)
+
+		ctx := logger.WithTraceID(c.Request.Context(), traceID)
+		c.Request = c.Request.WithContext(ctx)
+
 		c.Next()
 		
 		latency := time.Since(start)
@@ -30,7 +39,6 @@ func RequestLogger() gin.HandlerFunc {
 		}
 
 		logger.Info(c.Request.Context(), "HTTP Request",
-			"request_id", reqID,
 			"method", method,
 			"path", path,
 			"status", status,
