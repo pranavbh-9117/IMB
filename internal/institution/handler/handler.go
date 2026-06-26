@@ -140,7 +140,7 @@ func (h *InstitutionHandler) List(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Institution ID"
-// @Param request body dto.UpdateRequest true "Update Payload"
+// @Param request body dto.UpdateInstitutionInput true "Update Payload"
 // @Success 200 {object} response.SwaggerResponse[dto.InstitutionResponse] "Institution Updated"
 // @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
 // @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"

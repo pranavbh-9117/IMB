@@ -66,6 +66,117 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/forgot-password": {
+            "post": {
+                "description": "Sends a password reset email if the email is registered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Forgot Password",
+                "parameters": [
+                    {
+                        "description": "User Email",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset Link Sent",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/google/callback": {
+            "get": {
+                "description": "Handles the callback from Google and returns standard login response.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Google OAuth Callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth Authorization Code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OAuth State Parameter",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Google Login Successful",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_auth_dto_LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/google/login": {
+            "get": {
+                "description": "Initiates the Google OAuth authorization code flow.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Google OAuth Login",
+                "responses": {
+                    "302": {
+                        "description": "Redirects to Google"
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Authenticates a user and returns a JWT access token in the body and a refresh token in an HttpOnly cookie.",
@@ -157,6 +268,46 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "description": "Resets user password using a valid reset token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "Token and New Password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_auth_dto.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password Reset Successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
                         }
@@ -428,7 +579,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateRequest"
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateInstitutionInput"
                         }
                     }
                 ],
@@ -1683,7 +1834,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "selected_option_id": {
-                    "description": "Nullable if the student skips the question",
                     "type": "string"
                 }
             }
@@ -1773,6 +1923,17 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_pranavbh-9117_IMB_internal_auth_dto.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_internal_auth_dto.LoginRequest": {
             "type": "object",
             "required": [
@@ -1804,6 +1965,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "access_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_auth_dto.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "token"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "token": {
                     "type": "string"
                 }
             }
@@ -1882,7 +2059,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateRequest": {
+        "github_com_pranavbh-9117_IMB_internal_institution_dto.UpdateInstitutionInput": {
             "type": "object",
             "properties": {
                 "address": {
@@ -1967,7 +2144,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "note": {
-                    "description": "Optional comment",
                     "type": "string",
                     "maxLength": 500
                 },
@@ -2046,7 +2222,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "is_correct": {
-                    "description": "May be hidden from students depending on endpoint",
                     "type": "boolean"
                 },
                 "order_index": {

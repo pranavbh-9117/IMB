@@ -49,8 +49,14 @@ func Conflict(c *gin.Context, message string) {
 	c.JSON(http.StatusConflict, envelope{Success: false, Message: message, Data: nil})
 }
 
+// TooManyRequests writes a 429 response with the given error message.
+func TooManyRequests(c *gin.Context, message string) {
+	c.JSON(http.StatusTooManyRequests, envelope{Success: false, Message: message, Data: nil})
+}
+
 // InternalServerError writes a 500 response with a generic message.
 func InternalServerError(c *gin.Context) {
+
 	c.JSON(http.StatusInternalServerError, envelope{
 		Success: false,
 		Message: "internal server error",

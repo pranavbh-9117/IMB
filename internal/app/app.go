@@ -124,11 +124,16 @@ func (a *App) setupDependencies() {
 	db := a.db
 	cfg := a.cfg
 
+	// Email Subsystem
+	emailSvc := email.NewMailSender(cfg.SMTP)
+
 	// Auth Module
 	userRepo := authrepo.NewUserRepository(db)
 	tokenRepo := authrepo.NewRefreshTokenRepository(db)
-	authSvc := authservice.NewAuthService(userRepo, tokenRepo, cfg.JWT, cfg.OAuth)
+	resetRepo := authrepo.NewPasswordResetTokenRepository(db)
+	authSvc := authservice.NewAuthService(userRepo, tokenRepo, resetRepo, cfg.JWT, cfg.OAuth, emailSvc)
 	authHandler := authhandler.NewAuthHandler(authSvc, cfg.JWT)
+
 
 	// Health Module
 	healthHandler := health.NewHealthHandler(db)
@@ -138,8 +143,6 @@ func (a *App) setupDependencies() {
 	institutionSvc := instservice.NewInstitutionService(institutionRepo)
 	institutionHandler := insthandler.NewInstitutionHandler(institutionSvc)
 
-	// Email Subsystem
-	emailSvc := email.NewMailSender(cfg.SMTP)
 
 	// Leave Module
 	leaveRepo := leaverepo.NewLeaveRepository(db)

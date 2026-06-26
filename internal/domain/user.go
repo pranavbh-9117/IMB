@@ -42,3 +42,15 @@ type RefreshToken struct {
 	ExpiresAt time.Time `gorm:"not null"`
 	IsRevoked bool      `gorm:"default:false"`
 }
+
+// PasswordResetToken Model
+type PasswordResetToken struct {
+	Base
+
+	UserID    uuid.UUID `gorm:"type:uuid;not null"`
+	User      User      `gorm:"foreignKey:UserID"`
+	TokenHash string    `gorm:"type:text;uniqueIndex;not null"`
+	ExpiresAt time.Time `gorm:"not null"`
+	IsUsed    bool      `gorm:"default:false"`
+}
+

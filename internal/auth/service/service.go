@@ -20,6 +20,7 @@ var (
 	ErrGoogleEmailUnverified = errors.New("google account email is not verified")
 	ErrAccountNotProvisioned = errors.New("account not provisioned. Please contact administrator")
 	ErrGoogleProfileMismatch = errors.New("account linked to different Google profile")
+	ErrInvalidResetToken     = errors.New("reset token is invalid, expired, or already used")
 )
 
 type TokenPair struct {
@@ -53,4 +54,9 @@ type AuthService interface {
 	GetGoogleLoginURL() (url string, state string)
 
 	GoogleCallback(ctx context.Context, code string) (*LoginResult, error)
+
+	ForgotPassword(ctx context.Context, email string) error
+
+	ResetPassword(ctx context.Context, token, newPassword string) error
 }
+

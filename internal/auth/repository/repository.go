@@ -33,3 +33,13 @@ type RefreshTokenRepository interface {
 
 	RevokeAllByUserID(ctx context.Context, userID uuid.UUID) error
 }
+
+// PasswordResetTokenRepository
+type PasswordResetTokenRepository interface {
+	Create(ctx context.Context, token *domain.PasswordResetToken) error
+
+	FindByHash(ctx context.Context, hash string) (*domain.PasswordResetToken, error)
+
+	MarkAsUsed(ctx context.Context, id uuid.UUID) error
+}
+

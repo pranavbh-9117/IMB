@@ -7,6 +7,19 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
+// ForgotPasswordRequest
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ResetPasswordRequest
+type ResetPasswordRequest struct {
+	Token       string `json:"token"        binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
+
+
 // ChangePasswordRequest
 type ChangePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required"`
