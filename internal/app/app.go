@@ -13,6 +13,9 @@ import (
 	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
 	authrepo "github.com/pranavbh-9117/IMB/internal/auth/repository"
 	authservice "github.com/pranavbh-9117/IMB/internal/auth/service"
+	dashhandler "github.com/pranavbh-9117/IMB/internal/dashboard/handler"
+	dashrepo "github.com/pranavbh-9117/IMB/internal/dashboard/repository"
+	dashservice "github.com/pranavbh-9117/IMB/internal/dashboard/service"
 	"github.com/pranavbh-9117/IMB/internal/health"
 	insthandler "github.com/pranavbh-9117/IMB/internal/institution/handler"
 	instrepo "github.com/pranavbh-9117/IMB/internal/institution/repository"
@@ -28,6 +31,7 @@ import (
 	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
 	userservice "github.com/pranavbh-9117/IMB/internal/user/service"
 	"github.com/pranavbh-9117/IMB/internal/workerpool"
+	"github.com/pranavbh-9117/IMB/pkg/cache"
 	"github.com/pranavbh-9117/IMB/pkg/config"
 	"github.com/pranavbh-9117/IMB/pkg/database"
 	"github.com/pranavbh-9117/IMB/pkg/email"
@@ -164,6 +168,23 @@ func (a *App) setupDependencies() {
 	attemptSvc := attemptservice.NewAttemptService(attemptRepo, quizSvc)
 	attemptHandler := attempthandler.NewAttemptHandler(attemptSvc)
 
+	// Cache & Admin Dashboard Module
+	var cacheClient cache.CacheClient
+	if cfg.Redis.Addr == "" {
+		cacheClient = cache.NewNoopClient()
+	} else {
+		rc, rcErr := cache.NewRedisClient(cfg.Redis)
+		if rcErr != nil {
+			logger.Warn(context.Background(), "redis startup connectivity check failed, falling back to NoopClient", "error", rcErr)
+			cacheClient = cache.NewNoopClient()
+		} else {
+			cacheClient = rc
+		}
+	}
+	dashboardRepository := dashrepo.NewDashboardRepository(db)
+	dashboardService := dashservice.NewAdminDashboardService(dashboardRepository, a.pool)
+	dashboardHandler := dashhandler.NewAdminDashboardHandler(dashboardService, cacheClient, cfg.Cache.AdminDashboardTTL)
+
 	// Setup routes
 	a.setupRoutes(
 		healthHandler,
@@ -173,6 +194,7 @@ func (a *App) setupDependencies() {
 		userHandler,
 		quizHandler,
 		attemptHandler,
+		dashboardHandler,
 	)
 }
 

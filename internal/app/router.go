@@ -9,6 +9,8 @@ import (
 	attemptroutes "github.com/pranavbh-9117/IMB/internal/attempt/routes"
 	authhandler "github.com/pranavbh-9117/IMB/internal/auth/handler"
 	authroutes "github.com/pranavbh-9117/IMB/internal/auth/routes"
+	dashhandler "github.com/pranavbh-9117/IMB/internal/dashboard/handler"
+	dashroutes "github.com/pranavbh-9117/IMB/internal/dashboard/routes"
 	"github.com/pranavbh-9117/IMB/internal/domain"
 	"github.com/pranavbh-9117/IMB/internal/health"
 	insthandler "github.com/pranavbh-9117/IMB/internal/institution/handler"
@@ -30,6 +32,7 @@ func (a *App) setupRoutes(
 	userHandler *userhandler.UserHandler,
 	quizHandler *quizhandler.QuizHandler,
 	attemptHandler *attempthandler.AttemptHandler,
+	dashboardHandler dashhandler.AdminDashboardHandler,
 ) {
 	r := a.router
 	cfg := a.cfg
@@ -78,4 +81,9 @@ func (a *App) setupRoutes(
 	attemptRootGroup := v1.Group("")
 	attemptRootGroup.Use(authMiddleware)
 	attemptroutes.Register(quizGroup, attemptRootGroup, attemptHandler)
+
+	// Admin Dashboard Routes
+	adminDashboardGroup := v1.Group("/admin")
+	adminDashboardGroup.Use(authMiddleware, middleware.RequireRoles(domain.RoleInstituteAdmin))
+	dashroutes.Register(adminDashboardGroup, dashboardHandler)
 }

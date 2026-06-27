@@ -24,7 +24,6 @@ type workerPool struct {
 	opts     Options
 	jobQueue chan jobItem
 	wg       sync.WaitGroup
-
 	closed        atomic.Bool
 	activeWorkers atomic.Int64
 	completedJobs atomic.Int64
