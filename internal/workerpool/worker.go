@@ -11,6 +11,9 @@ func (p *workerPool) workerLoop(workerID int) {
 		if err := item.ctx.Err(); err != nil {
 			p.failedJobs.Add(1)
 			p.opts.Logger.Error(item.ctx, "skipping queued job due to canceled context", "worker_id", workerID, "error", err)
+			if cj, ok := item.job.(interface{ OnCancel() }); ok {
+				cj.OnCancel()
+			}
 			continue
 		}
 

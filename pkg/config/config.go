@@ -20,6 +20,8 @@ type Config struct {
 	OAuth    OAuthConfig
 	Seed     SeedConfig
 	SMTP     SMTPConfig
+	Redis    RedisConfig
+	Cache    CacheConfig
 }
 
 // Server configuration.
@@ -74,6 +76,19 @@ type SMTPConfig struct {
 	InitialDelay time.Duration
 	MaxDelay     time.Duration
 	Multiplier   float64
+}
+
+// Redis Configuration
+type RedisConfig struct {
+	Addr     string
+	Password string
+	DB       int
+	TLS      bool
+}
+
+// Cache Configuration
+type CacheConfig struct {
+	AdminDashboardTTL time.Duration
 }
 
 // Loads configuration  from .env
@@ -133,6 +148,15 @@ func Load() (*Config, error) {
 			InitialDelay: parseDurationOrDefault("SMTP_RETRY_INITIAL_DELAY", 500*time.Millisecond),
 			MaxDelay:     parseDurationOrDefault("SMTP_RETRY_MAX_DELAY", 10*time.Second),
 			Multiplier:   parseFloatOrDefault("SMTP_RETRY_MULTIPLIER", 2.0),
+		},
+		Redis: RedisConfig{
+			Addr:     os.Getenv("REDIS_ADDR"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       parseIntOrDefault("REDIS_DB", 0),
+			TLS:      parseBoolOrDefault("REDIS_TLS", false),
+		},
+		Cache: CacheConfig{
+			AdminDashboardTTL: parseDurationOrDefault("ADMIN_DASHBOARD_CACHE_TTL", 5*time.Minute),
 		},
 	}
 
@@ -239,6 +263,20 @@ func parseFloatOrDefault(key string, defaultVal float64) float64 {
 	parsed, err := strconv.ParseFloat(val, 64)
 	if err != nil {
 		log.Printf("WARNING: invalid value for %s: %q — falling back to default %f", key, val, defaultVal)
+		return defaultVal
+	}
+	return parsed
+}
+
+// parseBoolOrDefault parses a boolean from env, falling back to defaultVal
+func parseBoolOrDefault(key string, defaultVal bool) bool {
+	val := os.Getenv(key)
+	if strings.TrimSpace(val) == "" {
+		return defaultVal
+	}
+	parsed, err := strconv.ParseBool(val)
+	if err != nil {
+		log.Printf("WARNING: invalid value for %s: %q — falling back to default %t", key, val, defaultVal)
 		return defaultVal
 	}
 	return parsed

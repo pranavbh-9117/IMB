@@ -36,6 +36,30 @@ func (p *workerPool) NewGroup(ctx context.Context) Group {
 	}
 }
 
+type groupJob struct {
+	job Job
+	g   *taskGroup
+}
+
+func (gj *groupJob) Execute(ctx context.Context) error {
+	defer gj.g.wg.Done()
+	if err := gj.g.ctx.Err(); err != nil {
+		return err
+	}
+	err := gj.job.Execute(ctx)
+	if err != nil {
+		gj.g.errOnce.Do(func() {
+			gj.g.err = err
+			gj.g.cancel()
+		})
+	}
+	return err
+}
+
+func (gj *groupJob) OnCancel() {
+	gj.g.wg.Done()
+}
+
 // Submit enqueues the job into the pool. If any prior job in the group returned an error or the context
 // expired, Submit aborts early.
 func (g *taskGroup) Submit(job Job) error {
@@ -45,19 +69,8 @@ func (g *taskGroup) Submit(job Job) error {
 
 	g.wg.Add(1)
 
-	wrappedJob := JobFunc(func(ctx context.Context) error {
-		defer g.wg.Done()
-		err := job.Execute(ctx)
-		if err != nil {
-			g.errOnce.Do(func() {
-				g.err = err
-				g.cancel()
-			})
-		}
-		return err
-	})
-
-	err := g.pool.Submit(g.ctx, wrappedJob)
+	gj := &groupJob{job: job, g: g}
+	err := g.pool.Submit(g.ctx, gj)
 	if err != nil {
 		g.wg.Done()
 		return err

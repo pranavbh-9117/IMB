@@ -117,6 +117,26 @@ definitions:
       role:
         type: string
     type: object
+  github_com_pranavbh-9117_IMB_internal_dashboard_dto.AdminDashboardData:
+    properties:
+      leave_statistics:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.LeaveStatistics'
+      quiz_count:
+        type: integer
+      total_faculty:
+        type: integer
+      total_students:
+        type: integer
+    type: object
+  github_com_pranavbh-9117_IMB_internal_dashboard_dto.LeaveStatistics:
+    properties:
+      approved_this_month:
+        type: integer
+      pending:
+        type: integer
+      rejected_this_month:
+        type: integer
+    type: object
   github_com_pranavbh-9117_IMB_internal_institution_dto.CreateRequest:
     properties:
       address:
@@ -511,6 +531,17 @@ definitions:
         example: true
         type: boolean
     type: object
+  github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_dashboard_dto_AdminDashboardData:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.AdminDashboardData'
+      message:
+        example: operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   ? github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_institution_dto_InstitutionResponse
   : properties:
       data:
@@ -584,6 +615,41 @@ info:
   title: Institute Management Backend API
   version: "1.0"
 paths:
+  /admin/dashboard:
+    get:
+      description: Retrieves aggregated dashboard metrics (student count, faculty
+        count, quiz count, leave statistics) for the admin's institution.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard Retrieved
+          headers:
+            X-Cache:
+              description: HIT or MISS
+              type: string
+            X-Cache-TTL:
+              description: Configured cache TTL in seconds
+              type: string
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_dashboard_dto_AdminDashboardData'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Admin Dashboard
+      tags:
+      - Dashboard
   /auth/change-password:
     post:
       consumes:
