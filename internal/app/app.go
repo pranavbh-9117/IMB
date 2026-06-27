@@ -185,6 +185,9 @@ func (a *App) setupDependencies() {
 	dashboardService := dashservice.NewAdminDashboardService(dashboardRepository, a.pool)
 	dashboardHandler := dashhandler.NewAdminDashboardHandler(dashboardService, cacheClient, cfg.Cache.AdminDashboardTTL)
 
+	facultyDashboardService := dashservice.NewFacultyDashboardService(dashboardRepository, a.pool)
+	facultyDashboardHandler := dashhandler.NewFacultyDashboardHandler(facultyDashboardService)
+
 	// Setup routes
 	a.setupRoutes(
 		healthHandler,
@@ -195,6 +198,7 @@ func (a *App) setupDependencies() {
 		quizHandler,
 		attemptHandler,
 		dashboardHandler,
+		facultyDashboardHandler,
 	)
 }
 

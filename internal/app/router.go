@@ -33,6 +33,7 @@ func (a *App) setupRoutes(
 	quizHandler *quizhandler.QuizHandler,
 	attemptHandler *attempthandler.AttemptHandler,
 	dashboardHandler dashhandler.AdminDashboardHandler,
+	facultyDashboardHandler dashhandler.FacultyDashboardHandler,
 ) {
 	r := a.router
 	cfg := a.cfg
@@ -86,4 +87,9 @@ func (a *App) setupRoutes(
 	adminDashboardGroup := v1.Group("/admin")
 	adminDashboardGroup.Use(authMiddleware, middleware.RequireRoles(domain.RoleInstituteAdmin))
 	dashroutes.Register(adminDashboardGroup, dashboardHandler)
+
+	// Faculty Dashboard Routes
+	facultyDashboardGroup := v1.Group("/faculty")
+	facultyDashboardGroup.Use(authMiddleware, middleware.RequireRoles(domain.RoleFaculty))
+	dashroutes.RegisterFaculty(facultyDashboardGroup, facultyDashboardHandler)
 }
