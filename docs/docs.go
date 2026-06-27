@@ -368,6 +368,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/faculty/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves aggregated dashboard metrics for the logged-in faculty member.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Faculty Dashboard",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard Retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_dashboard_dto_FacultyDashboardData"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "504": {
+                        "description": "Gateway Timeout",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/institutions": {
             "get": {
                 "security": [
@@ -2072,6 +2121,43 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_pranavbh-9117_IMB_internal_dashboard_dto.FacultyDashboardData": {
+            "type": "object",
+            "properties": {
+                "leave_statistics": {
+                    "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.FacultyLeaveStatsDTO"
+                },
+                "quiz_analytics": {
+                    "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.QuizAnalyticsDTO"
+                },
+                "recent_activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.RecentActivityDTO"
+                    }
+                },
+                "student_performance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.StudentPerformanceDTO"
+                    }
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_dashboard_dto.FacultyLeaveStatsDTO": {
+            "type": "object",
+            "properties": {
+                "approved_this_month": {
+                    "type": "integer"
+                },
+                "pending_approvals": {
+                    "type": "integer"
+                },
+                "rejected_this_month": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_internal_dashboard_dto.LeaveStatistics": {
             "type": "object",
             "properties": {
@@ -2082,6 +2168,54 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rejected_this_month": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_dashboard_dto.QuizAnalyticsDTO": {
+            "type": "object",
+            "properties": {
+                "avg_score_percentage": {
+                    "type": "number"
+                },
+                "total_attempts_received": {
+                    "type": "integer"
+                },
+                "total_published": {
+                    "type": "integer"
+                },
+                "total_quizzes_created": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_dashboard_dto.RecentActivityDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_dashboard_dto.StudentPerformanceDTO": {
+            "type": "object",
+            "properties": {
+                "avg_score_percentage": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                },
+                "total_attempts": {
                     "type": "integer"
                 }
             }
@@ -2668,6 +2802,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.AdminDashboardData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_dashboard_dto_FacultyDashboardData": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_dashboard_dto.FacultyDashboardData"
                 },
                 "message": {
                     "type": "string",
