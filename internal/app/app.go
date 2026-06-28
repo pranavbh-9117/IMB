@@ -171,7 +171,7 @@ func (a *App) setupDependencies() {
 
 	// Quiz Attempt Module
 	attemptRepo := attemptrepo.NewAttemptRepository(db)
-	attemptSvc := attemptservice.NewAttemptService(attemptRepo, quizSvc)
+	attemptSvc := attemptservice.NewAttemptService(attemptRepo, quizSvc, emailSvc)
 	attemptHandler := attempthandler.NewAttemptHandler(attemptSvc)
 
 	// Cache & Admin Dashboard Module

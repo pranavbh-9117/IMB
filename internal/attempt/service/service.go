@@ -19,7 +19,8 @@ var (
 
 // AttemptService defines the interface for attempt business logic.
 type AttemptService interface {
-	SubmitAttempt(ctx context.Context, institutionID uuid.UUID, studentID uuid.UUID, quizID uuid.UUID, req *dto.SubmitAttemptRequest) error
+	SubmitAttempt(ctx context.Context, institutionID uuid.UUID, studentID uuid.UUID, quizID uuid.UUID, req *dto.SubmitAttemptRequest) (*dto.SubmitResultResponse, error)
 	GetStudentResults(ctx context.Context, studentID uuid.UUID) ([]dto.StudentResultResponse, error)
 	GetQuizResults(ctx context.Context, institutionID uuid.UUID, facultyID uuid.UUID, quizID uuid.UUID) ([]dto.FacultyResultResponse, error)
+	GetLeaderboard(ctx context.Context, institutionID uuid.UUID, quizID uuid.UUID) (*dto.LeaderboardResponse, error)
 }

@@ -20,6 +20,7 @@ type QuizAttempt struct {
 	SubmittedAt     *time.Time
 	Score           int         `gorm:"not null;default:0"`
 	TotalMarks      int         `gorm:"not null;default:0"`
+	Percentage      float64     `gorm:"not null;default:0.0"`
 }
 
 // QuizAnswer Model

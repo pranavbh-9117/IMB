@@ -7,10 +7,13 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/pranavbh-9117/IMB/internal/attempt/dto"
 	"github.com/pranavbh-9117/IMB/internal/domain"
 )
+
+type txKey struct{}
 
 type attemptRepository struct {
 	db *gorm.DB
@@ -21,25 +24,107 @@ func NewAttemptRepository(db *gorm.DB) AttemptRepository {
 	return &attemptRepository{db: db}
 }
 
-// CreateAttempt inserts a new attempt and its answers transactionally.
-func (r *attemptRepository) CreateAttempt(ctx context.Context, attempt *domain.QuizAttempt, answers []domain.QuizAnswer) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(attempt).Error; err != nil {
-			return fmt.Errorf("attempt repository: create attempt: %w", err)
-		}
+func (r *attemptRepository) getDB(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
+		return tx.WithContext(ctx)
+	}
+	return r.db.WithContext(ctx)
+}
 
-		for i := range answers {
-			answers[i].AttemptID = attempt.ID
-		}
-
-		if len(answers) > 0 {
-			if err := tx.Create(&answers).Error; err != nil {
-				return fmt.Errorf("attempt repository: create answers: %w", err)
-			}
-		}
-
-		return nil
+func (r *attemptRepository) DoInTransaction(ctx context.Context, fn func(txCtx context.Context) error) error {
+	if _, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
+		return fn(ctx)
+	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		txCtx := context.WithValue(ctx, txKey{}, tx)
+		return fn(txCtx)
 	})
+}
+
+func (r *attemptRepository) CreateAttempt(ctx context.Context, attempt *domain.QuizAttempt) error {
+	if err := r.getDB(ctx).Create(attempt).Error; err != nil {
+		return fmt.Errorf("attempt repository: create attempt: %w", err)
+	}
+	return nil
+}
+
+func (r *attemptRepository) BulkCreateAnswers(ctx context.Context, attemptID uuid.UUID, answers []domain.QuizAnswer) error {
+	for i := range answers {
+		answers[i].AttemptID = attemptID
+	}
+	if len(answers) == 0 {
+		return nil
+	}
+	if err := r.getDB(ctx).CreateInBatches(answers, 100).Error; err != nil {
+		return fmt.Errorf("attempt repository: bulk create answers: %w", err)
+	}
+	return nil
+}
+
+func (r *attemptRepository) UpdateAttemptResult(ctx context.Context, attemptID uuid.UUID, score int, percentage float64) error {
+	res := r.getDB(ctx).Model(&domain.QuizAttempt{}).Where("id = ?", attemptID).Updates(map[string]interface{}{
+		"score":      score,
+		"percentage": percentage,
+	})
+	if res.Error != nil {
+		return fmt.Errorf("attempt repository: update attempt result: %w", res.Error)
+	}
+	return nil
+}
+
+func (r *attemptRepository) UpsertLeaderboard(ctx context.Context, entry *domain.QuizLeaderboardEntry) error {
+	err := r.getDB(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "quiz_id"}, {Name: "student_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"attempt_id", "score", "total_marks", "percentage", "submitted_at", "updated_at"}),
+	}).Create(entry).Error
+	if err != nil {
+		return fmt.Errorf("attempt repository: upsert leaderboard: %w", err)
+	}
+	return nil
+}
+
+func (r *attemptRepository) GetStudentRank(ctx context.Context, quizID uuid.UUID, studentID uuid.UUID) (int, error) {
+	var rank int
+	query := `
+		SELECT rank FROM (
+			SELECT student_id, RANK() OVER (ORDER BY score DESC, submitted_at ASC, student_id ASC) AS rank
+			FROM quiz_leaderboard WHERE quiz_id = ?
+		) ranked WHERE student_id = ?
+	`
+	if err := r.getDB(ctx).Raw(query, quizID, studentID).Scan(&rank).Error; err != nil {
+		return 0, fmt.Errorf("attempt repository: get student rank: %w", err)
+	}
+	return rank, nil
+}
+
+func (r *attemptRepository) GetStudentEmail(ctx context.Context, studentID uuid.UUID) (string, error) {
+	var email string
+	if err := r.getDB(ctx).Table("users").Select("email").Where("id = ?", studentID).Scan(&email).Error; err != nil {
+		return "", fmt.Errorf("attempt repository: get student email: %w", err)
+	}
+	return email, nil
+}
+
+func (r *attemptRepository) GetLeaderboard(ctx context.Context, quizID uuid.UUID) ([]domain.QuizLeaderboardRankedEntry, error) {
+	var entries []domain.QuizLeaderboardRankedEntry
+	query := `
+		SELECT 
+			l.student_id,
+			u.name AS student_name,
+			l.score,
+			l.total_marks,
+			l.percentage,
+			l.submitted_at,
+			RANK() OVER (ORDER BY l.score DESC, l.submitted_at ASC, l.student_id ASC) AS rank
+		FROM quiz_leaderboard l
+		JOIN users u ON u.id = l.student_id
+		WHERE l.quiz_id = ?
+		ORDER BY rank ASC, l.student_id ASC
+	`
+	if err := r.getDB(ctx).Raw(query, quizID).Scan(&entries).Error; err != nil {
+		return nil, fmt.Errorf("attempt repository: get leaderboard: %w", err)
+	}
+	return entries, nil
 }
 
 // HasAttempted checks if a student has already started or submitted an attempt for this quiz.

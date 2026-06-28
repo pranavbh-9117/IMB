@@ -38,3 +38,26 @@ type FacultyResultResponse struct {
 	StartedAt    time.Time  `json:"started_at"`
 	SubmittedAt  *time.Time `json:"submitted_at"`
 }
+
+type SubmitResultResponse struct {
+	AttemptID       uuid.UUID `json:"attempt_id"`
+	QuizID          uuid.UUID `json:"quiz_id"`
+	Score           int       `json:"score"`
+	TotalMarks      int       `json:"total_marks"`
+	Percentage      float64   `json:"percentage"`
+	LeaderboardRank int       `json:"leaderboard_rank"`
+	SubmittedAt     time.Time `json:"submitted_at"`
+}
+
+type LeaderboardEntryResponse struct {
+	Rank        int       `json:"rank"`
+	StudentName string    `json:"student_name"`
+	Score       int       `json:"score"`
+	Percentage  float64   `json:"percentage"`
+	SubmittedAt time.Time `json:"submitted_at"`
+}
+
+type LeaderboardResponse struct {
+	QuizID  uuid.UUID                  `json:"quiz_id"`
+	Entries []LeaderboardEntryResponse `json:"entries"`
+}

@@ -56,7 +56,7 @@ func (h *AttemptHandler) handleServiceError(c *gin.Context, err error) {
 // @Produce json
 // @Param id path string true "Quiz ID"
 // @Param request body dto.SubmitAttemptRequest true "Attempt Details"
-// @Success 201 {object} response.SwaggerResponse[any] "Attempt Submitted"
+// @Success 201 {object} response.SwaggerResponse[dto.SubmitResultResponse] "Attempt Submitted"
 // @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
 // @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
 // @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
@@ -90,13 +90,50 @@ func (h *AttemptHandler) SubmitAttempt(c *gin.Context) {
 		return
 	}
 
-	err = h.svc.SubmitAttempt(c.Request.Context(), *instID, userID, quizID, &req)
+	res, err := h.svc.SubmitAttempt(c.Request.Context(), *instID, userID, quizID, &req)
 	if err != nil {
 		h.handleServiceError(c, err)
 		return
 	}
 
-	response.Created(c, "attempt submitted successfully", nil)
+	response.Created(c, "attempt submitted successfully", res)
+}
+
+// GetLeaderboard godoc
+// @Summary Get Quiz Leaderboard
+// @Description Retrieves the leaderboard rankings for a specific quiz.
+// @Tags Quiz Attempts
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Quiz ID"
+// @Success 200 {object} response.SwaggerResponse[dto.LeaderboardResponse] "Leaderboard Retrieved"
+// @Failure 400 {object} response.SwaggerErrorResponse "Bad Request"
+// @Failure 401 {object} response.SwaggerErrorResponse "Unauthorized"
+// @Failure 403 {object} response.SwaggerErrorResponse "Forbidden"
+// @Failure 404 {object} response.SwaggerErrorResponse "Not Found"
+// @Failure 500 {object} response.SwaggerErrorResponse "Internal Server Error"
+// @Router /quizzes/{id}/leaderboard [get]
+func (h *AttemptHandler) GetLeaderboard(c *gin.Context) {
+	idParam := c.Param("id")
+	quizID, err := uuid.Parse(idParam)
+	if err != nil {
+		response.BadRequest(c, "invalid quiz ID format")
+		return
+	}
+
+	institutionID, err := middleware.GetInstitutionID(c)
+	if err != nil || institutionID == nil {
+		response.Unauthorized(c, "institution ID not found in token")
+		return
+	}
+
+	res, err := h.svc.GetLeaderboard(c.Request.Context(), *institutionID, quizID)
+	if err != nil {
+		h.handleServiceError(c, err)
+		return
+	}
+
+	response.OK(c, "leaderboard retrieved successfully", res)
 }
 
 // GetStudentResults godoc
