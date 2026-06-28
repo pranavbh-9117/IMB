@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/pranavbh-9117/IMB/internal/domain"
+	"github.com/pranavbh-9117/IMB/pkg/database"
 )
 
 type txKey struct{}
@@ -24,12 +25,12 @@ func NewLeaveRepository(db *gorm.DB) LeaveRepository {
 	return &leaveRepository{db: db}
 }
 
-// getDB extracts the transaction from the context if it exists, otherwise returns the standard DB.
+// getDB extracts the transaction session from the infrastructure registry if active.
 func (r *leaveRepository) getDB(ctx context.Context) *gorm.DB {
 	if tx, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
 		return tx.WithContext(ctx)
 	}
-	return r.db.WithContext(ctx)
+	return database.GetSession(ctx, r.db)
 }
 
 // DoInTransaction executes the provided function within a database transaction.
@@ -149,3 +150,71 @@ func (r *leaveRepository) UpdateBalance(ctx context.Context, balance *domain.Lea
 	}
 	return nil
 }
+
+func (r *leaveRepository) GetInstitutionLeaveStatsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time) (int, int, int, error) {
+	var approved int64
+	var rejected int64
+	var pending int64
+
+	db := r.getDB(ctx)
+
+	if err := db.Model(&domain.LeaveRequest{}).
+		Where("institution_id = ? AND status = ? AND reviewed_at >= ? AND reviewed_at < ?", institutionID, domain.LeaveStatusApproved, startTime, endTime).
+		Count(&approved).Error; err != nil {
+		return 0, 0, 0, fmt.Errorf("leave repository: count approved leaves: %w", err)
+	}
+
+	if err := db.Model(&domain.LeaveRequest{}).
+		Where("institution_id = ? AND status = ? AND reviewed_at >= ? AND reviewed_at < ?", institutionID, domain.LeaveStatusRejected, startTime, endTime).
+		Count(&rejected).Error; err != nil {
+		return 0, 0, 0, fmt.Errorf("leave repository: count rejected leaves: %w", err)
+	}
+
+	if err := db.Model(&domain.LeaveRequest{}).
+		Where("institution_id = ? AND status = ? AND created_at < ?", institutionID, domain.LeaveStatusPending, endTime).
+		Count(&pending).Error; err != nil {
+		return 0, 0, 0, fmt.Errorf("leave repository: count pending leaves: %w", err)
+	}
+
+	return int(approved), int(rejected), int(pending), nil
+}
+
+func (r *leaveRepository) GetFacultyLeaveStatsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time) ([]domain.FacultyLeaveEntry, error) {
+	var entries []domain.FacultyLeaveEntry
+
+	query := `
+		SELECT 
+			CAST(u.id AS VARCHAR) AS faculty_id,
+			u.name AS name,
+			COUNT(CASE WHEN lr.status = 'pending' AND lr.created_at < ? THEN 1 END) AS pending,
+			COUNT(CASE WHEN lr.status = 'approved' AND lr.reviewed_at >= ? AND lr.reviewed_at < ? THEN 1 END) AS approved,
+			COUNT(CASE WHEN lr.status = 'rejected' AND lr.reviewed_at >= ? AND lr.reviewed_at < ? THEN 1 END) AS rejected
+		FROM leave_requests lr
+		JOIN users u ON u.id = lr.user_id
+		WHERE lr.institution_id = ? AND u.role = 'faculty'
+		GROUP BY u.id, u.name
+		HAVING COUNT(CASE WHEN lr.status = 'pending' AND lr.created_at < ? THEN 1 END) > 0 
+		    OR COUNT(CASE WHEN lr.status = 'approved' AND lr.reviewed_at >= ? AND lr.reviewed_at < ? THEN 1 END) > 0 
+		    OR COUNT(CASE WHEN lr.status = 'rejected' AND lr.reviewed_at >= ? AND lr.reviewed_at < ? THEN 1 END) > 0
+	`
+
+	if err := r.getDB(ctx).Raw(query, endTime, startTime, endTime, startTime, endTime, institutionID, endTime, startTime, endTime, startTime, endTime).Scan(&entries).Error; err != nil {
+		return nil, fmt.Errorf("leave repository: get faculty leave stats: %w", err)
+	}
+
+	return entries, nil
+}
+
+func (r *leaveRepository) GetPendingLeavesWithUser(ctx context.Context) ([]domain.LeaveRequest, error) {
+	var requests []domain.LeaveRequest
+	err := r.getDB(ctx).
+		Preload("User").
+		Preload("Institution").
+		Where("status = ?", domain.LeaveStatusPending).
+		Find(&requests).Error
+	if err != nil {
+		return nil, fmt.Errorf("leave repository: get pending leaves with user: %w", err)
+	}
+	return requests, nil
+}
+

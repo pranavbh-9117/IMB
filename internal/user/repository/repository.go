@@ -25,4 +25,6 @@ type UserRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 
 	EmailExists(ctx context.Context, email string) (bool, error)
+
+	GetByRoleAndInstitution(ctx context.Context, role domain.Role, institutionID uuid.UUID) ([]domain.User, error)
 }

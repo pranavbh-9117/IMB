@@ -4,6 +4,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -37,4 +38,10 @@ type LeaveRepository interface {
 	GetBalanceByUserID(ctx context.Context, userID uuid.UUID) (*domain.LeaveBalance, error)
 
 	UpdateBalance(ctx context.Context, balance *domain.LeaveBalance) error
+
+	GetInstitutionLeaveStatsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time) (int, int, int, error)
+
+	GetFacultyLeaveStatsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time) ([]domain.FacultyLeaveEntry, error)
+
+	GetPendingLeavesWithUser(ctx context.Context) ([]domain.LeaveRequest, error)
 }

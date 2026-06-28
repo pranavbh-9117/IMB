@@ -23,6 +23,8 @@ type Config struct {
 	Redis    RedisConfig
 	Cache    CacheConfig
 	Storage  StorageConfig
+	DailyStatsCron string
+	ReminderCron   string
 }
 
 // Server configuration.
@@ -167,6 +169,8 @@ func Load() (*Config, error) {
 		Storage: StorageConfig{
 			UploadDir: stringOrDefault("UPLOAD_DIR", "./uploads"),
 		},
+		DailyStatsCron: stringOrDefault("DAILY_STATS_CRON", "0 0 * * *"),
+		ReminderCron:   stringOrDefault("REMINDER_CRON", "0 8 * * *"),
 	}
 
 	if err := cfg.validate(); err != nil {
