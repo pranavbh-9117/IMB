@@ -4,6 +4,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -27,4 +28,6 @@ type AttemptRepository interface {
 	HasAttempted(ctx context.Context, studentID uuid.UUID, quizID uuid.UUID) (bool, error)
 	GetStudentResults(ctx context.Context, studentID uuid.UUID) ([]dto.StudentResultResponse, error)
 	GetQuizResults(ctx context.Context, quizID uuid.UUID) ([]dto.FacultyResultResponse, error)
+	GetInstitutionQuizStatsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time) (int, int, error)
+	GetTopStudentsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time, limit int) ([]domain.TopStudentEntry, error)
 }

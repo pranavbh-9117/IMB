@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/pranavbh-9117/IMB/internal/domain"
+	"github.com/pranavbh-9117/IMB/pkg/database"
 )
 
 type userRepository struct {
@@ -20,9 +21,13 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
+func (r *userRepository) getDB(ctx context.Context) *gorm.DB {
+	return database.GetSession(ctx, r.db)
+}
+
 // Create inserts a new user record into the database.
 func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
-	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+	if err := r.getDB(ctx).Create(user).Error; err != nil {
 		return fmt.Errorf("user repository: create: %w", err)
 	}
 	return nil
@@ -31,7 +36,7 @@ func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
 // GetByID retrieves a single active user by their UUID.
 func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user domain.User
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Where("id = ? AND is_active = ?", id, true).
 		First(&user).Error
 	if err != nil {
@@ -46,7 +51,7 @@ func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Use
 //Return list of active users
 func (r *userRepository) List(ctx context.Context, institutionID *uuid.UUID, offset, limit int) ([]domain.User, error) {
 	var users []domain.User
-	query := r.db.WithContext(ctx).Where("is_active = ?", true)
+	query := r.getDB(ctx).Where("is_active = ?", true)
 
 	if institutionID != nil {
 		query = query.Where("institution_id = ?", *institutionID)
@@ -66,7 +71,7 @@ func (r *userRepository) List(ctx context.Context, institutionID *uuid.UUID, off
 
 // Update persists modified user attributes to the database.
 func (r *userRepository) Update(ctx context.Context, user *domain.User) error {
-	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
+	if err := r.getDB(ctx).Save(user).Error; err != nil {
 		return fmt.Errorf("user repository: update: %w", err)
 	}
 	return nil
@@ -74,7 +79,7 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User) error {
 
 // Delete performs a soft-delete by toggling the is_active flag to false.
 func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Model(&domain.User{}).
 		Where("id = ?", id).
 		Update("is_active", false).Error
@@ -88,7 +93,7 @@ func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 func (r *userRepository) EmailExists(ctx context.Context, email string) (bool, error) {
 	var count int64
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Model(&domain.User{}).
 		Where("email = ?", email).
 		Count(&count).Error
@@ -97,3 +102,15 @@ func (r *userRepository) EmailExists(ctx context.Context, email string) (bool, e
 	}
 	return count > 0, nil
 }
+
+func (r *userRepository) GetByRoleAndInstitution(ctx context.Context, role domain.Role, institutionID uuid.UUID) ([]domain.User, error) {
+	var users []domain.User
+	err := r.getDB(ctx).
+		Where("role = ? AND institution_id = ? AND is_active = ?", role, institutionID, true).
+		Find(&users).Error
+	if err != nil {
+		return nil, fmt.Errorf("user repository: get by role and institution: %w", err)
+	}
+	return users, nil
+}
+

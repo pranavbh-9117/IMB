@@ -31,7 +31,12 @@ import (
 	userrepo "github.com/pranavbh-9117/IMB/internal/user/repository"
 	userservice "github.com/pranavbh-9117/IMB/internal/user/service"
 	"github.com/pranavbh-9117/IMB/internal/workerpool"
+	reminderservice "github.com/pranavbh-9117/IMB/internal/reminder/service"
+	"github.com/pranavbh-9117/IMB/internal/scheduler"
+	statsrepo "github.com/pranavbh-9117/IMB/internal/statistics/repository"
+	statsservice "github.com/pranavbh-9117/IMB/internal/statistics/service"
 	"github.com/pranavbh-9117/IMB/pkg/cache"
+	"github.com/pranavbh-9117/IMB/pkg/clock"
 	"github.com/pranavbh-9117/IMB/pkg/config"
 	"github.com/pranavbh-9117/IMB/pkg/database"
 	"github.com/pranavbh-9117/IMB/pkg/email"
@@ -44,6 +49,7 @@ type App struct {
 	cfg    *config.Config
 	db     *gorm.DB
 	pool   workerpool.Pool
+	runner *scheduler.Runner
 }
 
 func NewApp() (*App, error) {
@@ -112,6 +118,10 @@ func NewApp() (*App, error) {
 }
 
 func (a *App) Start() error {
+	if a.runner != nil {
+		a.runner.Start()
+	}
+
 	port := a.cfg.App.Port
 	if port == "" {
 		port = "8080"
@@ -123,6 +133,15 @@ func (a *App) Start() error {
 		return err
 	}
 	return nil
+}
+
+func (a *App) Stop() {
+	if a.runner != nil {
+		a.runner.Stop()
+	}
+	if a.pool != nil {
+		a.pool.Shutdown(context.Background())
+	}
 }
 
 func (a *App) setupDependencies() {
@@ -193,6 +212,18 @@ func (a *App) setupDependencies() {
 
 	facultyDashboardService := dashservice.NewFacultyDashboardService(dashboardRepository, a.pool)
 	facultyDashboardHandler := dashhandler.NewFacultyDashboardHandler(facultyDashboardService)
+
+	// Scheduler Subsystem
+	uow := database.NewUnitOfWork(db)
+	clk := clock.NewRealClock()
+	statsRepository := statsrepo.NewStatsRepository(db)
+	statisticsService := statsservice.NewStatisticsService(uow, attemptRepo, leaveRepo, statsRepository)
+	dailyStatsJob := scheduler.NewDailyStatsJob(institutionRepo, statisticsService, a.pool, clk)
+
+	reminderService := reminderservice.NewReminderService(leaveRepo, userManagementRepo, emailSvc)
+	leaveReminderJob := scheduler.NewLeaveReminderJob(reminderService)
+
+	a.runner = scheduler.New(dailyStatsJob, leaveReminderJob, cfg.DailyStatsCron, cfg.ReminderCron)
 
 	// Setup routes
 	a.setupRoutes(

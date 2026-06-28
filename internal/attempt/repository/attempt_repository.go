@@ -4,6 +4,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/pranavbh-9117/IMB/internal/attempt/dto"
 	"github.com/pranavbh-9117/IMB/internal/domain"
+	"github.com/pranavbh-9117/IMB/pkg/database"
 )
 
 type txKey struct{}
@@ -28,7 +30,7 @@ func (r *attemptRepository) getDB(ctx context.Context) *gorm.DB {
 	if tx, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
 		return tx.WithContext(ctx)
 	}
-	return r.db.WithContext(ctx)
+	return database.GetSession(ctx, r.db)
 }
 
 func (r *attemptRepository) DoInTransaction(ctx context.Context, fn func(txCtx context.Context) error) error {
@@ -189,3 +191,44 @@ func (r *attemptRepository) GetQuizResults(ctx context.Context, quizID uuid.UUID
 
 	return results, nil
 }
+
+func (r *attemptRepository) GetInstitutionQuizStatsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time) (int, int, error) {
+	var totalAttempts int64
+	var uniqueStudents int64
+
+	db := r.getDB(ctx).Model(&domain.QuizAttempt{}).Where("institution_id = ? AND submitted_at >= ? AND submitted_at < ?", institutionID, startTime, endTime)
+
+	if err := db.Count(&totalAttempts).Error; err != nil {
+		return 0, 0, fmt.Errorf("attempt repository: count total attempts: %w", err)
+	}
+
+	if err := db.Distinct("student_id").Count(&uniqueStudents).Error; err != nil {
+		return 0, 0, fmt.Errorf("attempt repository: count unique students: %w", err)
+	}
+
+	return int(totalAttempts), int(uniqueStudents), nil
+}
+
+func (r *attemptRepository) GetTopStudentsByWindow(ctx context.Context, institutionID uuid.UUID, startTime, endTime time.Time, limit int) ([]domain.TopStudentEntry, error) {
+	var entries []domain.TopStudentEntry
+
+	query := `
+		SELECT 
+			CAST(a.student_id AS VARCHAR) AS student_id,
+			u.name AS name,
+			AVG(a.percentage) AS avg_score
+		FROM quiz_attempts a
+		JOIN users u ON u.id = a.student_id
+		WHERE a.institution_id = ? AND a.submitted_at >= ? AND a.submitted_at < ?
+		GROUP BY a.student_id, u.name
+		ORDER BY avg_score DESC
+		LIMIT ?
+	`
+
+	if err := r.getDB(ctx).Raw(query, institutionID, startTime, endTime, limit).Scan(&entries).Error; err != nil {
+		return nil, fmt.Errorf("attempt repository: get top students: %w", err)
+	}
+
+	return entries, nil
+}
+
