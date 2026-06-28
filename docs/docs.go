@@ -1369,6 +1369,207 @@ const docTemplate = `{
                 }
             }
         },
+        "/quizzes/{id}/materials": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves metadata for all materials attached to a quiz.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Materials"
+                ],
+                "summary": "List Quiz Materials",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Materials Retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_quiz_dto_MaterialResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uploads supplementary materials (PDF, DOCX, Images) for a draft quiz. Faculty only. Max 20MB per file, max 10 files per quiz.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz Materials"
+                ],
+                "summary": "Upload Quiz Materials",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Files to upload",
+                        "name": "materials",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Materials Uploaded",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_UploadMaterialsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/materials/{materialId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Downloads a specific quiz material file.",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Quiz Materials"
+                ],
+                "summary": "Download Quiz Material",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Material ID",
+                        "name": "materialId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File downloaded",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_pranavbh-9117_IMB_pkg_response.SwaggerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/quizzes/{id}/publish": {
             "put": {
                 "security": [
@@ -2418,6 +2619,35 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.MaterialResponse": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "original_filename": {
+                    "type": "string"
+                },
+                "quiz_id": {
+                    "type": "string"
+                },
+                "stored_filename": {
+                    "type": "string"
+                },
+                "uploaded_by": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_internal_quiz_dto.OptionRequest": {
             "type": "object",
             "required": [
@@ -2537,6 +2767,17 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_internal_quiz_dto.UploadMaterialsResponse": {
+            "type": "object",
+            "properties": {
+                "uploaded": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.MaterialResponse"
+                    }
                 }
             }
         },
@@ -2727,6 +2968,25 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_quiz_dto_MaterialResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.MaterialResponse"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-array_github_com_pranavbh-9117_IMB_internal_quiz_dto_QuizResponse": {
             "type": "object",
             "properties": {
@@ -2882,6 +3142,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.QuizResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_pranavbh-9117_IMB_pkg_response.SwaggerResponse-github_com_pranavbh-9117_IMB_internal_quiz_dto_UploadMaterialsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_pranavbh-9117_IMB_internal_quiz_dto.UploadMaterialsResponse"
                 },
                 "message": {
                     "type": "string",

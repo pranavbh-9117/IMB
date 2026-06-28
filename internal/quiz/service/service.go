@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"mime/multipart"
 
 	"github.com/google/uuid"
 
@@ -30,3 +31,11 @@ type QuizService interface {
 	CreateQuestion(ctx context.Context, facultyID uuid.UUID, quizID uuid.UUID, req *dto.CreateQuestionRequest) (*dto.QuestionResponse, error)
 	GetQuizForEvaluation(ctx context.Context, quizID uuid.UUID) (*dto.QuizResponse, error)
 }
+
+// MaterialService defines the interface for quiz material uploads and downloads.
+type MaterialService interface {
+	UploadMaterials(ctx context.Context, institutionID uuid.UUID, facultyID uuid.UUID, quizID uuid.UUID, files []*multipart.FileHeader) (*dto.UploadMaterialsResponse, error)
+	ListMaterials(ctx context.Context, institutionID uuid.UUID, callerID uuid.UUID, callerRole domain.Role, quizID uuid.UUID) ([]dto.MaterialResponse, error)
+	DownloadMaterial(ctx context.Context, institutionID uuid.UUID, callerID uuid.UUID, callerRole domain.Role, quizID uuid.UUID, materialID uuid.UUID) (*dto.DownloadResult, error)
+}
+

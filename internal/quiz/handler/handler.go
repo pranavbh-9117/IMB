@@ -16,12 +16,13 @@ import (
 )
 
 type QuizHandler struct {
-	svc service.QuizService
+	svc         service.QuizService
+	materialSvc service.MaterialService
 }
 
 
-func NewQuizHandler(svc service.QuizService) *QuizHandler {
-	return &QuizHandler{svc: svc}
+func NewQuizHandler(svc service.QuizService, materialSvc service.MaterialService) *QuizHandler {
+	return &QuizHandler{svc: svc, materialSvc: materialSvc}
 }
 
 
