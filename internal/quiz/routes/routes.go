@@ -34,4 +34,13 @@ func Register(rg *gin.RouterGroup, h *handler.QuizHandler) {
 
 	// POST /quizzes/:id/questions
 	rg.POST("/:id/questions", facultyOnly, h.CreateQuestion)
+
+	// POST /quizzes/:id/materials
+	rg.POST("/:id/materials", facultyOnly, h.UploadMaterials)
+
+	// GET /quizzes/:id/materials
+	rg.GET("/:id/materials", facultyOrStudent, h.ListMaterials)
+
+	// GET /quizzes/:id/materials/:materialId
+	rg.GET("/:id/materials/:materialId", facultyOrStudent, h.DownloadMaterial)
 }

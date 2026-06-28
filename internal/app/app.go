@@ -36,6 +36,7 @@ import (
 	"github.com/pranavbh-9117/IMB/pkg/database"
 	"github.com/pranavbh-9117/IMB/pkg/email"
 	"github.com/pranavbh-9117/IMB/pkg/logger"
+	"github.com/pranavbh-9117/IMB/pkg/storage"
 )
 
 type App struct {
@@ -158,10 +159,15 @@ func (a *App) setupDependencies() {
 	userSvc := userservice.NewUserService(userManagementRepo, leaveSvc)
 	userHandler := userhandler.NewUserHandler(userSvc)
 
+	// Storage Backend
+	localStorage := storage.NewLocalStorage(cfg.Storage.UploadDir)
+
 	// Quiz Module
 	quizRepo := quizrepo.NewQuizRepository(db)
+	materialRepo := quizrepo.NewMaterialRepository(db)
 	quizSvc := quizservice.NewQuizService(quizRepo)
-	quizHandler := quizhandler.NewQuizHandler(quizSvc)
+	materialSvc := quizservice.NewMaterialService(quizRepo, materialRepo, localStorage)
+	quizHandler := quizhandler.NewQuizHandler(quizSvc, materialSvc)
 
 	// Quiz Attempt Module
 	attemptRepo := attemptrepo.NewAttemptRepository(db)

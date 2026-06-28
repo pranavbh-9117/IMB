@@ -22,6 +22,7 @@ type Config struct {
 	SMTP     SMTPConfig
 	Redis    RedisConfig
 	Cache    CacheConfig
+	Storage  StorageConfig
 }
 
 // Server configuration.
@@ -91,6 +92,11 @@ type CacheConfig struct {
 	AdminDashboardTTL time.Duration
 }
 
+// Storage Configuration
+type StorageConfig struct {
+	UploadDir string
+}
+
 // Loads configuration  from .env
 func Load() (*Config, error) {
 
@@ -157,6 +163,9 @@ func Load() (*Config, error) {
 		},
 		Cache: CacheConfig{
 			AdminDashboardTTL: parseDurationOrDefault("ADMIN_DASHBOARD_CACHE_TTL", 5*time.Minute),
+		},
+		Storage: StorageConfig{
+			UploadDir: stringOrDefault("UPLOAD_DIR", "./uploads"),
 		},
 	}
 
@@ -281,3 +290,13 @@ func parseBoolOrDefault(key string, defaultVal bool) bool {
 	}
 	return parsed
 }
+
+// stringOrDefault parses a string from env, falling back to defaultVal
+func stringOrDefault(key string, defaultVal string) string {
+	val := os.Getenv(key)
+	if strings.TrimSpace(val) == "" {
+		return defaultVal
+	}
+	return val
+}
+
